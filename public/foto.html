@@ -1,0 +1,330 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#FF7A00">
+<title>Orquestra AI · Sua foto no telão</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --orange: #FF7A00; --orange-2: #FF9A2E; --orange-deep: #E85000;
+    --ink: #2B1408; --cream: #FFF6EC; --muted: #8A6A55;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    font-family: 'Outfit', system-ui, -apple-system, sans-serif;
+    color: var(--ink);
+    background: var(--cream);
+    background-image:
+      radial-gradient(circle at 10% -10%, #FFD3A1 0, transparent 45%),
+      radial-gradient(circle at 110% 30%, #FFC488 0, transparent 40%);
+    min-height: 100dvh;
+    overflow-x: hidden;
+  }
+  .screen { display: none; min-height: 100dvh; padding: max(20px, env(safe-area-inset-top)) 16px max(24px, env(safe-area-inset-bottom)); flex-direction: column; align-items: center; }
+  .screen.active { display: flex; animation: fade .35s ease; }
+  @keyframes fade { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+  .brand { font-weight: 900; letter-spacing: .08em; font-size: 15px; color: var(--orange-deep); display: flex; align-items: center; gap: 8px; }
+  .brand i { width: 8px; height: 8px; border-radius: 50%; background: var(--orange); box-shadow: 0 0 0 4px #FFD9B3; }
+
+  /* Boas-vindas */
+  .hero { flex: 1; width: 100%; max-width: 440px; display: flex; flex-direction: column; justify-content: center; gap: 22px; text-align: center; }
+  .robot-wrap { width: 168px; height: 168px; margin: 0 auto; border-radius: 50%; background: radial-gradient(circle at 30% 25%, #FFFFFF, #FFE4CC 60%, #FFC58F); display: grid; place-items: center; box-shadow: 0 18px 40px -14px #FF6A0099; }
+  .robot-wrap svg { width: 128px; margin-top: 10px; animation: bob 2.6s ease-in-out infinite; }
+  @keyframes bob { 50% { transform: translateY(-6px) rotate(-3deg); } }
+  h1 { font-size: clamp(30px, 9vw, 40px); line-height: 1.05; margin: 0; font-weight: 900; }
+  h1 span { color: var(--orange); }
+  .sub { color: var(--muted); font-size: 17px; margin: 0; line-height: 1.4; }
+  label.field { text-align: left; display: block; font-weight: 600; font-size: 14px; color: var(--muted); }
+  input[type=text] {
+    width: 100%; margin-top: 6px; padding: 16px 18px; font: inherit; font-size: 18px; color: var(--ink);
+    border: 2px solid #FFD2A8; border-radius: 16px; background: #fff; outline: none; transition: border-color .2s, box-shadow .2s;
+  }
+  input[type=text]:focus { border-color: var(--orange); box-shadow: 0 0 0 4px #FF7A0026; }
+
+  .btn {
+    appearance: none; border: 0; font: inherit; font-weight: 800; font-size: 18px; cursor: pointer;
+    padding: 17px 22px; border-radius: 999px; width: 100%; display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+    transition: transform .12s ease, box-shadow .2s;
+  }
+  .btn:active { transform: scale(.97); }
+  .btn-primary { color: #fff; background: linear-gradient(135deg, var(--orange-2), var(--orange-deep)); box-shadow: 0 12px 26px -10px #FF6A00cc; }
+  .btn-ghost { background: #fff; color: var(--ink); border: 2px solid #FFD2A8; }
+  .btn[disabled] { opacity: .6; pointer-events: none; }
+  .btn svg { width: 22px; height: 22px; }
+
+  /* Câmera */
+  #camera { background: #120803; color: #fff; padding-left: 0; padding-right: 0; }
+  #camera .brand { color: #FFB066; }
+  .stage { position: relative; width: min(100%, calc((100dvh - 200px) * 0.6667)); aspect-ratio: 2 / 3; margin: 14px auto 0; border-radius: 18px; overflow: hidden; background: #000; box-shadow: 0 20px 50px -10px #000; }
+  .stage video { position: absolute; object-fit: cover; }
+  .stage video.mirror { transform: scaleX(-1); }
+  .stage img.frame { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+  .count { position: absolute; inset: 0; display: grid; place-items: center; font-size: 150px; font-weight: 900; color: #fff; text-shadow: 0 6px 30px #0008; pointer-events: none; }
+  .count.pop { animation: pop .9s ease forwards; }
+  @keyframes pop { from { transform: scale(1.6); opacity: 0; } 30% { opacity: 1; transform: scale(1); } to { opacity: 0; transform: scale(.8); } }
+  .flash { position: absolute; inset: 0; background: #fff; opacity: 0; pointer-events: none; }
+  .flash.go { animation: flash .5s ease; }
+  @keyframes flash { from { opacity: 1; } to { opacity: 0; } }
+  .controls { display: flex; align-items: center; justify-content: space-around; width: 100%; max-width: 420px; margin-top: auto; padding: 18px 16px 0; }
+  .round { width: 56px; height: 56px; border-radius: 50%; border: 0; background: #ffffff1f; color: #fff; display: grid; place-items: center; cursor: pointer; }
+  .round svg { width: 26px; height: 26px; }
+  .shutter { width: 84px; height: 84px; border-radius: 50%; border: 5px solid #fff; background: radial-gradient(circle, var(--orange-2) 0 58%, transparent 60%); cursor: pointer; box-shadow: 0 0 0 6px #FF7A0055; transition: transform .1s; }
+  .shutter:active { transform: scale(.92); }
+  .hint { font-size: 14px; color: #FFCFA0; margin-top: 10px; text-align: center; }
+
+  /* Revisão / sucesso */
+  .result { width: 100%; max-width: 420px; flex: 1; display: flex; flex-direction: column; gap: 14px; justify-content: center; }
+  .result img.photo { width: 100%; border-radius: 18px; box-shadow: 0 22px 44px -16px #A8400088; display: block; }
+  .result h2 { margin: 0; font-size: 28px; font-weight: 900; text-align: center; }
+  .result p { margin: 0; color: var(--muted); text-align: center; }
+  .row { display: flex; gap: 10px; }
+  .row .btn { flex: 1; white-space: nowrap; font-size: 16px; padding: 17px 14px; }
+  .spinner { width: 22px; height: 22px; border: 3px solid #fff6; border-top-color: #fff; border-radius: 50%; animation: spin .8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .check { width: 76px; height: 76px; margin: 0 auto; border-radius: 50%; background: linear-gradient(135deg, var(--orange-2), var(--orange-deep)); display: grid; place-items: center; box-shadow: 0 12px 30px -8px #FF6A00aa; animation: popin .5s cubic-bezier(.2,1.6,.4,1); }
+  .check svg { width: 40px; height: 40px; }
+  @keyframes popin { from { transform: scale(0); } to { transform: scale(1); } }
+  .error { color: #B42300; background: #FFE5DC; border-radius: 12px; padding: 10px 14px; font-size: 15px; display: none; }
+  .error.show { display: block; }
+  #fileInput { display: none; }
+</style>
+</head>
+<body>
+
+<!-- 1. Boas-vindas -->
+<section class="screen active" id="welcome">
+  <div class="brand"><i></i> ORQUESTRA AI</div>
+  <div class="hero">
+    <div class="robot-wrap" id="heroRobot"></div>
+    <h1>Tire sua foto e <span>apareça no telão!</span></h1>
+    <p class="sub">Faça uma selfie com a moldura da Orquestra AI e veja ela surgir no mural do nosso stand.</p>
+    <label class="field">Seu nome (opcional)
+      <input type="text" id="name" maxlength="40" placeholder="Como quer aparecer?" autocomplete="given-name">
+    </label>
+    <button class="btn btn-primary" id="start">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>
+      Abrir câmera
+    </button>
+    <div class="error" id="err1"></div>
+  </div>
+</section>
+
+<!-- 2. Câmera -->
+<section class="screen" id="camera">
+  <div class="brand"><i></i> ORQUESTRA AI</div>
+  <div class="stage" id="stage">
+    <video id="video" playsinline autoplay muted class="mirror"></video>
+    <img class="frame" id="frameOverlay" alt="">
+    <div class="count" id="count"></div>
+    <div class="flash" id="flash"></div>
+  </div>
+  <p class="hint">Enquadre-se na moldura e sorria! 😄</p>
+  <div class="controls">
+    <button class="round" id="back" aria-label="Voltar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+    <button class="shutter" id="shoot" aria-label="Tirar foto"></button>
+    <button class="round" id="flip" aria-label="Trocar câmera"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><path d="M9 13a3 3 0 0 1 5.2-2"/><path d="M15 13a3 3 0 0 1-5.2 2"/><path d="M14.5 8.8V11H12.3"/><path d="M9.5 17.2V15h2.2"/></svg></button>
+  </div>
+</section>
+
+<!-- 3. Revisão -->
+<section class="screen" id="review">
+  <div class="brand"><i></i> ORQUESTRA AI</div>
+  <div class="result">
+    <img class="photo" id="preview" alt="Sua foto com a moldura">
+    <div class="error" id="err2"></div>
+    <div class="row">
+      <button class="btn btn-ghost" id="retake">Tirar outra</button>
+      <button class="btn btn-primary" id="send">Enviar ao telão</button>
+    </div>
+  </div>
+</section>
+
+<!-- 4. Sucesso -->
+<section class="screen" id="done">
+  <div class="brand"><i></i> ORQUESTRA AI</div>
+  <div class="result">
+    <div class="check"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>
+    <h2>Pronto! Olhe para o telão 👀</h2>
+    <p>Sua foto já está no mural do stand. Obrigado por participar!</p>
+    <img class="photo" id="finalImg" alt="Sua foto">
+    <button class="btn btn-primary" id="save">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11"/><path d="M7 10l5 5 5-5"/><path d="M5 20h14"/></svg>
+      Salvar minha foto
+    </button>
+    <button class="btn btn-ghost" id="again">Tirar outra foto</button>
+  </div>
+</section>
+
+<input type="file" id="fileInput" accept="image/*" capture="user">
+
+<script src="/frame.js"></script>
+<script>
+(() => {
+  const $ = (id) => document.getElementById(id);
+  const F = window.OrqFrame;
+  const dateText = new Date().toLocaleDateString('pt-BR');
+  let stream = null, facing = 'user', busy = false, photoData = null, frameImg = null;
+
+  $('heroRobot').innerHTML = F.robotSVG();
+  // Posiciona o vídeo exatamente na janela da moldura
+  Object.assign($('video').style, {
+    left: (F.HOLE.x / F.W * 100) + '%', top: (F.HOLE.y / F.H * 100) + '%',
+    width: (F.HOLE.w / F.W * 100) + '%', height: (F.HOLE.h / F.H * 100) + '%',
+  });
+  try { $('name').value = localStorage.getItem('orq-name') || ''; } catch {}
+
+  function show(id) {
+    document.querySelectorAll('.screen').forEach((s) => s.classList.toggle('active', s.id === id));
+    window.scrollTo(0, 0);
+  }
+  function showErr(el, msg) { el.textContent = msg; el.classList.toggle('show', !!msg); }
+  const getName = () => $('name').value.trim();
+
+  async function prepareFrame() {
+    const svg = F.frameSVG(getName(), dateText);
+    $('frameOverlay').src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+    frameImg = await F.frameImage(getName(), dateText);
+  }
+
+  const liveCameraOk = () => window.isSecureContext && navigator.mediaDevices && navigator.mediaDevices.getUserMedia;
+
+  async function startCamera() {
+    stopCamera();
+    stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: facing, width: { ideal: 1920 }, height: { ideal: 1920 } }, audio: false,
+    });
+    const v = $('video');
+    v.srcObject = stream;
+    v.classList.toggle('mirror', facing === 'user');
+    await v.play().catch(() => {});
+  }
+  function stopCamera() {
+    if (stream) stream.getTracks().forEach((t) => t.stop());
+    stream = null;
+  }
+
+  // Desenha a fonte (vídeo ou imagem) cobrindo a janela da moldura e aplica a moldura por cima
+  function compose(source, sw, sh, mirror) {
+    const c = document.createElement('canvas');
+    c.width = F.W; c.height = F.H;
+    const ctx = c.getContext('2d');
+    const { x, y, w, h } = F.HOLE;
+    const scale = Math.max(w / sw, h / sh);
+    const dw = sw * scale, dh = sh * scale;
+    ctx.fillStyle = '#000';
+    ctx.fillRect(x, y, w, h);
+    ctx.save();
+    ctx.beginPath(); ctx.rect(x, y, w, h); ctx.clip();
+    if (mirror) { ctx.translate(x + w / 2, 0); ctx.scale(-1, 1); ctx.translate(-(x + w / 2), 0); }
+    ctx.drawImage(source, x + (w - dw) / 2, y + (h - dh) / 2, dw, dh);
+    ctx.restore();
+    ctx.drawImage(frameImg, 0, 0, F.W, F.H);
+    return c.toDataURL('image/jpeg', 0.88);
+  }
+
+  function goReview(data) {
+    photoData = data;
+    $('preview').src = data;
+    showErr($('err2'), '');
+    show('review');
+  }
+
+  $('start').onclick = async () => {
+    showErr($('err1'), '');
+    try { localStorage.setItem('orq-name', getName()); } catch {}
+    try { await prepareFrame(); } catch { return showErr($('err1'), 'Não foi possível carregar a moldura. Recarregue a página.'); }
+    if (liveCameraOk()) {
+      try { await startCamera(); show('camera'); return; }
+      catch (e) { console.warn('Câmera ao vivo indisponível, usando câmera do sistema', e); }
+    }
+    $('fileInput').value = '';
+    $('fileInput').click();
+  };
+
+  // Alternativa: câmera nativa do celular (funciona mesmo sem HTTPS)
+  $('fileInput').onchange = () => {
+    const file = $('fileInput').files[0];
+    if (!file) return;
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => { goReview(compose(img, img.naturalWidth, img.naturalHeight, false)); URL.revokeObjectURL(url); };
+    img.onerror = () => showErr($('err1'), 'Não consegui ler essa foto. Tente novamente.');
+    img.src = url;
+  };
+
+  $('shoot').onclick = async () => {
+    if (busy) return;
+    busy = true;
+    const el = $('count');
+    for (const n of [3, 2, 1]) {
+      el.textContent = n; el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop');
+      await new Promise((r) => setTimeout(r, 900));
+    }
+    el.textContent = '';
+    const fl = $('flash'); fl.classList.remove('go'); void fl.offsetWidth; fl.classList.add('go');
+    const v = $('video');
+    const data = compose(v, v.videoWidth, v.videoHeight, facing === 'user');
+    busy = false;
+    stopCamera();
+    goReview(data);
+  };
+
+  $('flip').onclick = async () => {
+    facing = facing === 'user' ? 'environment' : 'user';
+    try { await startCamera(); } catch { facing = 'user'; await startCamera().catch(() => {}); }
+  };
+  $('back').onclick = () => { stopCamera(); show('welcome'); };
+
+  $('retake').onclick = async () => {
+    if (liveCameraOk()) {
+      try { await startCamera(); show('camera'); return; } catch {}
+    }
+    $('fileInput').value = '';
+    $('fileInput').click();
+  };
+
+  $('send').onclick = async () => {
+    const btn = $('send');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> Enviando…';
+    showErr($('err2'), '');
+    try {
+      const r = await fetch('/api/photos', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ image: photoData, name: getName() }),
+      });
+      if (!r.ok) throw new Error();
+      $('finalImg').src = photoData;
+      show('done');
+    } catch {
+      showErr($('err2'), 'Ops! Não conseguimos enviar. Verifique a conexão e tente de novo.');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Enviar ao telão';
+    }
+  };
+
+  $('save').onclick = async () => {
+    try {
+      const blob = await (await fetch(photoData)).blob();
+      const file = new File([blob], 'orquestra-ai.jpg', { type: 'image/jpeg' });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({ files: [file], title: 'Minha foto na Orquestra AI' });
+        return;
+      }
+    } catch (e) { if (e && e.name === 'AbortError') return; }
+    const a = document.createElement('a');
+    a.href = photoData; a.download = 'orquestra-ai.jpg';
+    document.body.appendChild(a); a.click(); a.remove();
+  };
+
+  $('again').onclick = () => show('welcome');
+})();
+</script>
+</body>
+</html>

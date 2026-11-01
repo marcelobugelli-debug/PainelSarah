@@ -1,0 +1,314 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Orquestra AI · Mural do Telão</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --orange: #FF7A00; --orange-2: #FF9A2E; --orange-deep: #E85000;
+    --bg: #140904; --ink: #2B1408; --text: #FFF3E6; --muted: #D9B79A;
+    --side: clamp(260px, 22vw, 400px);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; overflow: hidden; }
+  body { font-family: 'Outfit', system-ui, sans-serif; background: var(--bg); color: var(--text); cursor: default; }
+
+  /* Fundo animado */
+  .bg { position: fixed; inset: 0; overflow: hidden; z-index: 0; }
+  .blob { position: absolute; border-radius: 50%; filter: blur(90px); opacity: .55; animation: drift 22s ease-in-out infinite alternate; }
+  .b1 { width: 55vw; height: 55vw; left: -15vw; top: -20vw; background: #FF6A00; }
+  .b2 { width: 45vw; height: 45vw; right: -12vw; bottom: -18vw; background: #FF9A2E; animation-delay: -7s; }
+  .b3 { width: 30vw; height: 30vw; left: 40vw; top: 50vh; background: #B83A00; animation-delay: -14s; opacity: .45; }
+  @keyframes drift { to { transform: translate(6vw, 4vh) scale(1.15); } }
+  .grain { position: absolute; inset: 0; background-image: radial-gradient(#ffffff10 1px, transparent 1px); background-size: 22px 22px; }
+
+  .app { position: relative; z-index: 1; height: 100vh; display: grid; grid-template-columns: 1fr var(--side); gap: 2.2vw; padding: 2.4vw; }
+
+  /* Cabeçalho + mural */
+  .main { display: flex; flex-direction: column; min-width: 0; min-height: 0; }
+  header { display: flex; align-items: center; justify-content: space-between; gap: 2vw; margin-bottom: 1.8vw; }
+  .title { display: flex; align-items: center; gap: 1.2vw; }
+  .logo { width: 4.6vw; height: 4.6vw; min-width: 56px; min-height: 56px; border-radius: 1.3vw; background: radial-gradient(circle at 30% 25%, #FFFFFF, #FFE4CC 60%, #FFC58F); display: grid; place-items: center; box-shadow: 0 10px 30px -10px #FF6A00; overflow: hidden; }
+  .logo svg { width: 84%; margin-top: 8%; }
+  h1 { margin: 0; font-size: clamp(30px, 3.4vw, 72px); font-weight: 900; letter-spacing: .04em; line-height: 1; }
+  h1 span { color: var(--orange); }
+  .tag { margin: .4vw 0 0; color: var(--muted); font-size: clamp(14px, 1.25vw, 26px); font-weight: 600; }
+  .counter { text-align: right; }
+  .counter b { display: block; font-size: clamp(34px, 3.6vw, 80px); font-weight: 900; color: var(--orange-2); line-height: 1; font-variant-numeric: tabular-nums; }
+  .counter small { color: var(--muted); font-size: clamp(12px, 1vw, 20px); font-weight: 600; text-transform: uppercase; letter-spacing: .12em; }
+
+  .wall { flex: 1; min-height: 0; display: grid; gap: 1.4vw; align-content: center; justify-content: center; }
+  .card { position: relative; aspect-ratio: 2 / 3; border-radius: .9vw; overflow: hidden; background: #2a1408; box-shadow: 0 1.2vw 2.4vw -1vw #000c; transform: rotate(var(--rot, 0deg)); transition: transform .5s ease; }
+  .card img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .card.enter { animation: cardIn .8s cubic-bezier(.2,1.3,.4,1) both; }
+  .card.swap img { animation: swap .9s ease both; }
+  @keyframes cardIn { from { opacity: 0; transform: scale(.4) rotate(-12deg); } }
+  @keyframes swap { from { opacity: 0; transform: scale(1.08); } }
+
+  .empty { grid-column: 1 / -1; text-align: center; color: var(--muted); }
+  .empty .big { font-size: clamp(28px, 3vw, 60px); font-weight: 900; color: var(--text); margin: 1vw 0 .5vw; }
+  .empty .bot { width: 12vw; margin: 0 auto; animation: bob 2.6s ease-in-out infinite; }
+  .empty p { font-size: clamp(16px, 1.4vw, 28px); margin: 0; }
+  @keyframes bob { 50% { transform: translateY(-10px) rotate(-3deg); } }
+
+  /* Lateral com QR Code */
+  aside { display: flex; flex-direction: column; gap: 1.4vw; min-height: 0; }
+  .qr-card { background: linear-gradient(160deg, var(--orange-2), var(--orange-deep)); border-radius: 1.6vw; padding: 1.8vw; text-align: center; color: #fff; box-shadow: 0 2vw 4vw -2vw #FF5A00aa; position: relative; overflow: hidden; }
+  .qr-card::after { content: ''; position: absolute; width: 60%; aspect-ratio: 1; border-radius: 50%; background: #ffffff1a; right: -20%; top: -20%; }
+  .qr-card h2 { margin: 0 0 1.2vw; font-size: clamp(20px, 1.9vw, 40px); font-weight: 900; line-height: 1.1; position: relative; z-index: 1; }
+  .qr-box { background: #fff; border-radius: 1.2vw; padding: 1.1vw; aspect-ratio: 1; display: grid; place-items: center; position: relative; z-index: 1; animation: pulse 2.8s ease-in-out infinite; }
+  @keyframes pulse { 50% { box-shadow: 0 0 0 .8vw #ffffff40; } }
+  #qr, #qr img, #qr canvas { width: 100% !important; height: auto !important; display: block; image-rendering: pixelated; }
+  .url { margin-top: 1vw; font-size: clamp(11px, .85vw, 18px); font-weight: 600; opacity: .9; word-break: break-all; position: relative; z-index: 1; }
+  .steps { list-style: none; margin: 0; padding: 0; display: grid; gap: .9vw; }
+  .steps li { display: flex; align-items: center; gap: 1vw; background: #ffffff0d; border: 1px solid #ffffff17; border-radius: 1vw; padding: 1vw 1.1vw; font-size: clamp(14px, 1.15vw, 24px); font-weight: 600; }
+  .steps li span { flex: none; width: 2.3vw; height: 2.3vw; min-width: 30px; min-height: 30px; border-radius: 50%; display: grid; place-items: center; background: var(--orange); color: #fff; font-weight: 900; }
+
+  /* Destaque da nova foto */
+  .spot { position: fixed; inset: 0; z-index: 10; display: grid; place-items: center; background: #0d0502d9; backdrop-filter: blur(8px); opacity: 0; pointer-events: none; transition: opacity .5s ease; }
+  .spot.on { opacity: 1; }
+  .spot-inner { display: flex; align-items: center; gap: 4vw; }
+  .spot img { height: 86vh; aspect-ratio: 2 / 3; border-radius: 1.4vw; box-shadow: 0 0 0 .5vw #fff, 0 3vw 8vw -2vw #FF6A00; transform: scale(.6) rotate(-6deg); opacity: 0; transition: transform .8s cubic-bezier(.2,1.4,.4,1), opacity .5s; }
+  .spot.on img { transform: none; opacity: 1; }
+  .spot-text { max-width: 34vw; transform: translateX(4vw); opacity: 0; transition: all .7s .25s ease; }
+  .spot.on .spot-text { transform: none; opacity: 1; }
+  .spot-text small { display: inline-block; background: var(--orange); color: #fff; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; padding: .5vw 1.1vw; border-radius: 99px; font-size: clamp(12px, 1.1vw, 22px); }
+  .spot-text h3 { font-size: clamp(36px, 4.6vw, 100px); font-weight: 900; line-height: 1.02; margin: 1.2vw 0 .8vw; }
+  .spot-text h3 span { color: var(--orange-2); }
+  .spot-text p { font-size: clamp(16px, 1.6vw, 34px); color: var(--muted); margin: 0; }
+  .confetti { position: fixed; inset: 0; z-index: 11; pointer-events: none; }
+
+  .fs-btn { position: fixed; right: 1vw; bottom: 1vw; z-index: 20; border: 0; border-radius: 99px; padding: 8px 14px; background: #ffffff14; color: #fff; font: inherit; font-size: 13px; cursor: pointer; opacity: 0; transition: opacity .3s; }
+  body:hover .fs-btn { opacity: .8; }
+  .live { display: inline-flex; align-items: center; gap: .5vw; }
+  .live i { width: .7vw; height: .7vw; min-width: 9px; min-height: 9px; border-radius: 50%; background: #3BE07A; box-shadow: 0 0 0 0 #3BE07A; animation: live 2s infinite; }
+  .live.off i { background: #888; animation: none; }
+  @keyframes live { 70% { box-shadow: 0 0 0 .6vw #3BE07A00; } }
+</style>
+</head>
+<body>
+<div class="bg"><div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div><div class="grain"></div></div>
+
+<div class="app">
+  <section class="main">
+    <header>
+      <div class="title">
+        <div class="logo" id="logo"></div>
+        <div>
+          <h1>ORQUESTRA <span>AI</span></h1>
+          <p class="tag"><span class="live" id="live"><i></i> Mural de quem passou pelo nosso stand</span></p>
+        </div>
+      </div>
+      <div class="counter"><b id="count">0</b><small>participantes</small></div>
+    </header>
+    <div class="wall" id="wall"></div>
+  </section>
+
+  <aside>
+    <div class="qr-card">
+      <h2>Escaneie e apareça aqui! 📸</h2>
+      <div class="qr-box"><div id="qr"></div></div>
+      <div class="url" id="url"></div>
+    </div>
+    <ol class="steps">
+      <li><span>1</span> Aponte a câmera do celular para o QR Code</li>
+      <li><span>2</span> Tire uma selfie com a moldura laranja</li>
+      <li><span>3</span> Envie e veja sua foto no telão!</li>
+    </ol>
+  </aside>
+</div>
+
+<div class="spot" id="spot">
+  <div class="spot-inner">
+    <img id="spotImg" alt="">
+    <div class="spot-text">
+      <small>Nova foto no mural</small>
+      <h3 id="spotName"></h3>
+      <p>Obrigado por participar da Orquestra AI 🧡</p>
+    </div>
+  </div>
+</div>
+<canvas class="confetti" id="confetti"></canvas>
+<button class="fs-btn" id="fs">Tela cheia (F)</button>
+
+<script src="/vendor/qrcode.min.js"></script>
+<script src="/frame.js"></script>
+<script>
+(() => {
+  const $ = (id) => document.getElementById(id);
+  const robot = window.OrqFrame.robotSVG();
+  $('logo').innerHTML = robot;
+
+  let photos = [];            // todas, mais nova primeiro
+  let shown = [];             // ids exibidos no mural, na ordem dos cards
+  let slots = 12, cols = 4;
+  const queue = []; let spotlightBusy = false;
+
+  // Calcula quantas fotos cabem no mural sem rolagem
+  function layout() {
+    const wall = $('wall');
+    const W = wall.clientWidth, H = wall.clientHeight;
+    const gap = window.innerWidth * 0.014;
+    let best = { c: 1, r: 1, cw: 0, score: -1 };
+    const want = Math.max(photos.length, 1);
+    for (let c = 1; c <= 9; c++) {
+      for (let r = 1; r <= 5; r++) {
+        // maior card que cabe na largura e na altura
+        const cw = Math.min((W - gap * (c - 1)) / c, (H - gap * (r - 1)) / r / 1.5);
+        if (cw < 60) continue;
+        // prioriza mostrar todas as fotos; depois, cards maiores
+        const score = Math.min(c * r, want) * 100000 + cw;
+        if (score > best.score) best = { c, r, cw, score };
+      }
+    }
+    cols = best.c; slots = best.c * best.r;
+    wall.style.gridTemplateColumns = `repeat(${cols}, ${best.cw}px)`;
+  }
+
+  const rot = () => `${(Math.random() * 5 - 2.5).toFixed(2)}deg`;
+
+  function cardEl(p, cls) {
+    const d = document.createElement('div');
+    d.className = 'card ' + (cls || '');
+    d.dataset.id = p.id;
+    d.style.setProperty('--rot', rot());
+    const img = new Image(); img.src = p.url; img.alt = p.name || 'Participante';
+    d.appendChild(img);
+    return d;
+  }
+
+  function render() {
+    layout();
+    const wall = $('wall');
+    wall.innerHTML = '';
+    $('count').textContent = photos.length;
+    if (!photos.length) {
+      wall.innerHTML = `<div class="empty"><div class="bot">${robot}</div><div class="big">Seja o primeiro a aparecer aqui!</div><p>Escaneie o QR Code ao lado e tire sua foto 🧡</p></div>`;
+      shown = [];
+      return;
+    }
+    shown = photos.slice(0, slots).map((p) => p.id);
+    shown.forEach((id) => wall.appendChild(cardEl(photos.find((p) => p.id === id))));
+  }
+
+  function addToWall(p) {
+    const wall = $('wall');
+    if (photos.length === 1 || wall.querySelector('.empty')) return render();
+    layout();
+    wall.prepend(cardEl(p, 'enter'));
+    shown.unshift(p.id);
+    while (shown.length > slots) { shown.pop(); wall.lastElementChild.remove(); }
+  }
+
+  // Quando há mais fotos que espaço, troca uma foto antiga de tempos em tempos
+  setInterval(() => {
+    if (spotlightBusy || photos.length <= slots) return;
+    const hidden = photos.filter((p) => !shown.includes(p.id));
+    if (!hidden.length) return;
+    const p = hidden[Math.floor(Math.random() * hidden.length)];
+    const idx = 3 + Math.floor(Math.random() * Math.max(1, shown.length - 3)); // preserva as 3 mais recentes
+    const card = $('wall').children[idx];
+    if (!card) return;
+    const img = new Image();
+    img.onload = () => {
+      card.classList.remove('swap'); void card.offsetWidth; card.classList.add('swap');
+      card.replaceChildren(img); card.dataset.id = p.id; shown[idx] = p.id;
+    };
+    img.src = p.url; img.alt = p.name || 'Participante';
+  }, 5000);
+
+  // Destaque de nova foto
+  function spotlight(p) {
+    queue.push(p);
+    if (!spotlightBusy) nextSpot();
+  }
+  function nextSpot() {
+    const p = queue.shift();
+    if (!p) { spotlightBusy = false; return; }
+    spotlightBusy = true;
+    const img = $('spotImg');
+    img.onload = () => {
+      $('spotName').innerHTML = p.name ? `Olá, <span>${escapeHtml(p.name)}</span>!` : 'Mais um <span>participante!</span>';
+      $('spot').classList.add('on');
+      burst();
+      setTimeout(() => {
+        $('spot').classList.remove('on');
+        addToWall(p);
+        setTimeout(nextSpot, 900);
+      }, 5500);
+    };
+    img.onerror = () => { addToWall(p); nextSpot(); };
+    img.src = p.url;
+  }
+  const escapeHtml = (s) => s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+  // Confete laranja
+  const cv = $('confetti'), cx = cv.getContext('2d');
+  let parts = [], raf = null;
+  function burst() {
+    cv.width = innerWidth; cv.height = innerHeight;
+    const colors = ['#FF7A00', '#FF9A2E', '#FFD27A', '#FFFFFF', '#E85000'];
+    for (let i = 0; i < 220; i++) {
+      parts.push({
+        x: innerWidth / 2 + (Math.random() - .5) * innerWidth * .3, y: innerHeight * .55,
+        vx: (Math.random() - .5) * 22, vy: -Math.random() * 24 - 8, r: Math.random() * 8 + 5,
+        a: Math.random() * 6, va: (Math.random() - .5) * .4, c: colors[i % colors.length], life: 0,
+      });
+    }
+    if (!raf) tick();
+  }
+  function tick() {
+    cx.clearRect(0, 0, cv.width, cv.height);
+    parts = parts.filter((p) => p.y < cv.height + 40 && p.life < 260);
+    for (const p of parts) {
+      p.vy += .5; p.vx *= .99; p.x += p.vx; p.y += p.vy; p.a += p.va; p.life++;
+      cx.save(); cx.translate(p.x, p.y); cx.rotate(p.a); cx.fillStyle = p.c;
+      cx.fillRect(-p.r / 2, -p.r / 4, p.r, p.r / 2); cx.restore();
+    }
+    raf = parts.length ? requestAnimationFrame(tick) : (cx.clearRect(0, 0, cv.width, cv.height), null);
+  }
+
+  // Dados + tempo real
+  async function load() {
+    const [info, list] = await Promise.all([
+      fetch('/api/info').then((r) => r.json()),
+      fetch('/api/photos').then((r) => r.json()),
+    ]);
+    $('url').textContent = info.captureUrl.replace(/^https?:\/\//, '');
+    $('qr').innerHTML = '';
+    new QRCode($('qr'), { text: info.captureUrl, width: 512, height: 512, colorDark: '#2B1408', colorLight: '#FFFFFF', correctLevel: QRCode.CorrectLevel.M });
+    photos = list.slice().reverse();
+    render();
+  }
+
+  function connect() {
+    const es = new EventSource('/events');
+    es.onopen = () => $('live').classList.remove('off');
+    es.onerror = () => $('live').classList.add('off');
+    es.addEventListener('photo', (e) => {
+      const p = JSON.parse(e.data);
+      if (photos.some((x) => x.id === p.id)) return;
+      photos.unshift(p);
+      $('count').textContent = photos.length;
+      spotlight(p);
+    });
+    es.addEventListener('remove', (e) => {
+      const { id } = JSON.parse(e.data);
+      photos = photos.filter((p) => p.id !== id);
+      render();
+    });
+  }
+
+  let rt; addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(render, 200); });
+  const fs = () => (document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen()).catch(() => {});
+  $('fs').onclick = fs;
+  addEventListener('keydown', (e) => { if (e.key === 'f' || e.key === 'F') fs(); });
+
+  load().then(connect).catch((e) => { console.error(e); setTimeout(() => location.reload(), 5000); });
+})();
+</script>
+</body>
+</html>

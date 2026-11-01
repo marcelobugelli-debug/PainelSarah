@@ -1,0 +1,8 @@
+{
+  "name": "orquestra-ai-mural",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Mural de fotos interativo da Orquestra AI para exposição (telão + celular via QR Code)",
+  "scripts": { "start": "node server.js" },
+  "engines": { "node": ">=18" }
+}
