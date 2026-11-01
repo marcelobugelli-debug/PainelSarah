@@ -11,7 +11,7 @@
 <style>
   :root {
     --accent: #6C5CE7; --accent-2: #8E7CF0; --accent-deep: #4B3BC4;
-    --ink: #2B1408; --cream: #F6F5FB; --muted: #6E6A85;
+    --ink: #1E1B2E; --cream: #F6F5FB; --muted: #6E6A85;
   }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   html, body { margin: 0; height: 100%; }
@@ -59,7 +59,7 @@
   .btn svg { width: 22px; height: 22px; }
 
   /* Câmera */
-  #camera { background: #120803; color: #fff; padding-left: 0; padding-right: 0; }
+  #camera { background: #0E0C1A; color: #fff; padding-left: 0; padding-right: 0; }
   #camera .brand { color: #B8AEF5; }
   .stage { position: relative; width: min(100%, calc((100dvh - 200px) * 0.6667)); aspect-ratio: 2 / 3; margin: 14px auto 0; border-radius: 18px; overflow: hidden; background: #000; box-shadow: 0 20px 50px -10px #000; }
   .stage video { position: absolute; object-fit: cover; }
@@ -93,6 +93,42 @@
   .error { color: #B42318; background: #FFE5DC; border-radius: 12px; padding: 10px 14px; font-size: 15px; display: none; }
   .error.show { display: block; }
   #fileInput { display: none; }
+
+  /* Escolha da moldura */
+  .frames { width: 100%; max-width: 460px; display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 18px 0; }
+  .frame-opt { appearance: none; border: 3px solid transparent; background: #fff; border-radius: 18px; padding: 8px; cursor: pointer; box-shadow: 0 10px 24px -14px #3B2F8F66; font: inherit; font-weight: 700; color: var(--ink); display: flex; flex-direction: column; gap: 6px; align-items: center; }
+  .frame-opt img { width: 100%; aspect-ratio: 2 / 3; border-radius: 10px; display: block; }
+  .frame-opt.sel { border-color: var(--accent); box-shadow: 0 0 0 4px #6C5CE733, 0 10px 24px -14px #3B2F8F66; }
+  .page-title { font-size: 26px; font-weight: 900; margin: 14px 0 0; text-align: center; }
+
+  /* Acessórios na câmera */
+  .stage canvas.fx { position: absolute; pointer-events: none; }
+  .stage canvas.fx.mirror { transform: scaleX(-1); }
+  .chips { display: flex; gap: 8px; overflow-x: auto; width: 100%; max-width: 460px; padding: 12px 16px 2px; scrollbar-width: none; }
+  .chips::-webkit-scrollbar { display: none; }
+  .chip { flex: none; border: 0; border-radius: 999px; padding: 8px 12px; background: #ffffff1f; color: #fff; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+  .chip b { font-size: 20px; }
+  .chip.sel { background: var(--accent); }
+  .fx-status { font-size: 13px; color: #CFC8F5; min-height: 18px; margin-top: 6px; text-align: center; }
+  .top-row { display: flex; align-items: center; justify-content: space-between; width: 100%; max-width: 460px; padding: 0 16px; }
+  .link-btn { border: 0; background: #ffffff1f; color: #fff; font: inherit; font-size: 13px; font-weight: 600; padding: 7px 12px; border-radius: 999px; cursor: pointer; }
+
+  /* Revisão: figurinhas e recado */
+  .photo-wrap { position: relative; width: 100%; touch-action: none; user-select: none; -webkit-user-select: none; }
+  .photo-wrap img.photo { width: 100%; }
+  .sticker { position: absolute; transform: translate(-50%, -50%); line-height: 1; cursor: grab; touch-action: none; }
+  .sticker.sel { outline: 2px dashed #fff; outline-offset: 4px; border-radius: 8px; filter: drop-shadow(0 0 6px #6C5CE7); }
+  .stickers { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; padding: 2px 0; }
+  .stickers::-webkit-scrollbar { display: none; }
+  .stickers button { flex: none; width: 46px; height: 46px; border-radius: 14px; border: 2px solid #DCD8F2; background: #fff; font-size: 26px; cursor: pointer; }
+  .st-tools { display: none; gap: 8px; justify-content: center; }
+  .st-tools.show { display: flex; }
+  .st-tools button { border: 2px solid #DCD8F2; background: #fff; border-radius: 999px; padding: 8px 14px; font: inherit; font-weight: 700; color: var(--ink); cursor: pointer; }
+  .small-label { font-weight: 600; font-size: 14px; color: var(--muted); }
+  textarea { width: 100%; margin-top: 6px; padding: 14px 16px; font: inherit; font-size: 17px; color: var(--ink); border: 2px solid #DCD8F2; border-radius: 16px; background: #fff; outline: none; resize: none; min-height: 84px; }
+  textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 4px #6C5CE726; }
+  .counter-chars { text-align: right; font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .msg-done { background: #fff; border-radius: 16px; padding: 12px 16px; font-style: italic; color: var(--ink); text-align: center; display: none; }
 </style>
 </head>
 <body>
@@ -103,28 +139,45 @@
   <div class="hero">
     <div class="robot-wrap" id="heroRobot"></div>
     <h1>Tire sua foto e <span>apareça no telão!</span></h1>
-    <p class="sub"><span data-cfg="chamada"></span></p>
+    <p class="sub" data-cfg="chamada"></p>
     <label class="field">Seu nome (opcional)
       <input type="text" id="name" maxlength="40" placeholder="Como quer aparecer?" autocomplete="given-name">
     </label>
-    <button class="btn btn-primary" id="start">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>
-      Abrir câmera
-    </button>
+    <button class="btn btn-primary" id="start">Escolher moldura →</button>
     <div class="error" id="err1"></div>
   </div>
 </section>
 
-<!-- 2. Câmera -->
-<section class="screen" id="camera">
+<!-- 2. Moldura -->
+<section class="screen" id="choose">
   <div class="brand"><i></i> <span data-cfg="nome">Mural de Fotos</span></div>
+  <h2 class="page-title">Escolha sua moldura</h2>
+  <div class="frames" id="frames"></div>
+  <div style="width:100%;max-width:460px;display:flex;flex-direction:column;gap:10px;margin-top:auto">
+    <button class="btn btn-primary" id="openCam">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>
+      Abrir câmera
+    </button>
+    <button class="btn btn-ghost" id="backWelcome">Voltar</button>
+    <div class="error" id="err0"></div>
+  </div>
+</section>
+
+<!-- 3. Câmera -->
+<section class="screen" id="camera">
+  <div class="top-row">
+    <div class="brand"><i></i> <span data-cfg="nome">Mural de Fotos</span></div>
+    <button class="link-btn" id="changeFrame">Trocar moldura</button>
+  </div>
   <div class="stage" id="stage">
     <video id="video" playsinline autoplay muted class="mirror"></video>
+    <canvas class="fx mirror" id="fx"></canvas>
     <img class="frame" id="frameOverlay" alt="">
     <div class="count" id="count"></div>
     <div class="flash" id="flash"></div>
   </div>
-  <p class="hint">Enquadre-se na moldura e sorria! 😄</p>
+  <div class="chips" id="chips"></div>
+  <div class="fx-status" id="fxStatus">Escolha um acessório (opcional)</div>
   <div class="controls">
     <button class="round" id="back" aria-label="Voltar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
     <button class="shutter" id="shoot" aria-label="Tirar foto"></button>
@@ -132,11 +185,22 @@
   </div>
 </section>
 
-<!-- 3. Revisão -->
+<!-- 4. Revisão -->
 <section class="screen" id="review">
   <div class="brand"><i></i> <span data-cfg="nome">Mural de Fotos</span></div>
   <div class="result">
-    <img class="photo" id="preview" alt="Sua foto com a moldura">
+    <div class="photo-wrap" id="photoWrap"><img class="photo" id="preview" alt="Sua foto com a moldura" draggable="false"></div>
+    <div>
+      <div class="small-label">Figurinhas (toque para colocar, arraste para mover)</div>
+      <div class="stickers" id="stickerBar"></div>
+      <div class="st-tools" id="stTools">
+        <button id="stSmaller">− Menor</button><button id="stBigger">+ Maior</button><button id="stRemove">🗑 Tirar</button>
+      </div>
+    </div>
+    <label class="small-label">Deixe um recado (opcional)
+      <textarea id="message" maxlength="140" placeholder="Escreva uma mensagem…"></textarea>
+    </label>
+    <div class="counter-chars"><span id="msgCount">0</span>/140</div>
     <div class="error" id="err2"></div>
     <div class="row">
       <button class="btn btn-ghost" id="retake">Tirar outra</button>
@@ -145,7 +209,7 @@
   </div>
 </section>
 
-<!-- 4. Sucesso -->
+<!-- 5. Sucesso -->
 <section class="screen" id="done">
   <div class="brand"><i></i> <span data-cfg="nome">Mural de Fotos</span></div>
   <div class="result">
@@ -153,6 +217,7 @@
     <h2>Pronto! Olhe para o telão 👀</h2>
     <p data-cfg="enviado"></p>
     <img class="photo" id="finalImg" alt="Sua foto">
+    <div class="msg-done" id="msgDone"></div>
     <button class="btn btn-primary" id="save">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11"/><path d="M7 10l5 5 5-5"/><path d="M5 20h14"/></svg>
       Salvar minha foto
@@ -164,20 +229,21 @@
 <input type="file" id="fileInput" accept="image/*" capture="user">
 
 <script src="/frame.js"></script>
+<script src="/acessorios.js"></script>
 <script>
 (() => {
   const $ = (id) => document.getElementById(id);
-  const F = window.PainelFrame;
+  const F = window.PainelFrame, A = window.Acessorios;
   const dateText = new Date().toLocaleDateString('pt-BR');
-  let stream = null, facing = 'user', busy = false, photoData = null, frameImg = null;
+  const STICKERS = (window.PAINEL.figurinhas || ['🎉', '🎂', '🥳', '💖', '⭐', '🌈', '🦄', '😂', '😎', '🔥', '👑', '🎈', '✨', '🐱', '🍕', '💜']);
+  let stream = null, facing = 'user', busy = false, frameImg = null;
+  let frameId = F.FRAMES[0].id, fxKind = 'nenhum', faces = [];
+  let basePhoto = null, rawPhoto = null, finalPhoto = null;
+  let stickers = [], selSticker = null;
 
   $('heroRobot').innerHTML = F.logoSVG();
-  // Posiciona o vídeo exatamente na janela da moldura
-  Object.assign($('video').style, {
-    left: (F.HOLE.x / F.W * 100) + '%', top: (F.HOLE.y / F.H * 100) + '%',
-    width: (F.HOLE.w / F.W * 100) + '%', height: (F.HOLE.h / F.H * 100) + '%',
-  });
-  try { $('name').value = localStorage.getItem('mural-name') || ''; } catch {}
+  try { $('name').value = localStorage.getItem('mural-name') || ''; frameId = localStorage.getItem('mural-frame') || frameId; } catch {}
+  if (!F.FRAMES.some((f) => f.id === frameId)) frameId = F.FRAMES[0].id;
 
   function show(id) {
     document.querySelectorAll('.screen').forEach((s) => s.classList.toggle('active', s.id === id));
@@ -185,76 +251,160 @@
   }
   function showErr(el, msg) { el.textContent = msg; el.classList.toggle('show', !!msg); }
   const getName = () => $('name').value.trim();
+  const hole = () => F.byId(frameId).hole;
 
+  // ---------- Molduras ----------
+  function renderFrames() {
+    $('frames').innerHTML = '';
+    F.FRAMES.forEach((f) => {
+      const b = document.createElement('button');
+      b.className = 'frame-opt' + (f.id === frameId ? ' sel' : '');
+      b.innerHTML = `<img alt="" src="${F.thumbURL(f.id, getName())}"><span>${f.nome}</span>`;
+      b.onclick = () => { frameId = f.id; try { localStorage.setItem('mural-frame', frameId); } catch {} renderFrames(); };
+      $('frames').appendChild(b);
+    });
+  }
+  function placeVideo() {
+    const h = hole();
+    const box = { left: (h.x / F.W * 100) + '%', top: (h.y / F.H * 100) + '%', width: (h.w / F.W * 100) + '%', height: (h.h / F.H * 100) + '%' };
+    Object.assign($('video').style, box);
+    Object.assign($('fx').style, box);
+  }
   async function prepareFrame() {
-    const svg = F.frameSVG(getName(), dateText);
+    const svg = F.frameSVG(frameId, getName(), dateText);
     $('frameOverlay').src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
-    frameImg = await F.frameImage(getName(), dateText);
+    frameImg = await F.frameImage(frameId, getName(), dateText);
+    placeVideo();
   }
 
+  // ---------- Câmera ----------
   const liveCameraOk = () => window.isSecureContext && navigator.mediaDevices && navigator.mediaDevices.getUserMedia;
-
   async function startCamera() {
     stopCamera();
-    stream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: facing, width: { ideal: 1920 }, height: { ideal: 1920 } }, audio: false,
-    });
+    stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: facing, width: { ideal: 1920 }, height: { ideal: 1920 } }, audio: false });
     const v = $('video');
     v.srcObject = stream;
     v.classList.toggle('mirror', facing === 'user');
+    $('fx').classList.toggle('mirror', facing === 'user');
     await v.play().catch(() => {});
+    loop();
   }
   function stopCamera() {
     if (stream) stream.getTracks().forEach((t) => t.stop());
     stream = null;
   }
 
-  // Desenha a fonte (vídeo ou imagem) cobrindo a janela da moldura e aplica a moldura por cima
-  function compose(source, sw, sh, mirror) {
+  // ---------- Acessórios ao vivo ----------
+  function renderChips() {
+    $('chips').innerHTML = '';
+    A.LISTA.forEach((a) => {
+      const b = document.createElement('button');
+      b.className = 'chip' + (a.id === fxKind ? ' sel' : '');
+      b.innerHTML = `<b>${a.emoji}</b>${a.nome}`;
+      b.onclick = () => chooseFx(a.id);
+      $('chips').appendChild(b);
+    });
+  }
+  async function chooseFx(id) {
+    fxKind = id; renderChips();
+    if (id === 'nenhum') { $('fxStatus').textContent = 'Escolha um acessório (opcional)'; return; }
+    if (!A.pronto()) {
+      $('fxStatus').textContent = 'Carregando acessórios…';
+      try { await A.carregar(); } catch (e) {
+        console.warn(e); fxKind = 'nenhum'; renderChips();
+        $('fxStatus').textContent = 'Acessórios indisponíveis neste celular. Use as figurinhas depois da foto!';
+        return;
+      }
+    }
+    $('fxStatus').textContent = 'Funciona com várias pessoas na foto! 😄';
+  }
+  let raf = 0;
+  function loop() {
+    cancelAnimationFrame(raf);
+    const v = $('video'), c = $('fx');
+    const tick = () => {
+      if (!stream) return;
+      const cw = c.clientWidth, ch = c.clientHeight, dpr = Math.min(2, window.devicePixelRatio || 1);
+      if (c.width !== Math.round(cw * dpr)) { c.width = Math.round(cw * dpr); c.height = Math.round(ch * dpr); }
+      const ctx = c.getContext('2d');
+      ctx.clearRect(0, 0, c.width, c.height);
+      if (fxKind !== 'nenhum' && A.pronto() && v.videoWidth) {
+        faces = A.suavizar(A.detectar(v, v.videoWidth, v.videoHeight));
+        const s = Math.max(c.width / v.videoWidth, c.height / v.videoHeight);
+        const ox = (c.width - v.videoWidth * s) / 2, oy = (c.height - v.videoHeight * s) / 2;
+        A.desenhar(ctx, faces, fxKind, (p) => ({ x: ox + p.x * s, y: oy + p.y * s }));
+      } else faces = [];
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+  }
+
+  // ---------- Montagem da foto ----------
+  // Foto sem moldura (só a câmera), guardada para o download do administrador
+  function rawImage(source, sw, sh, mirror) {
+    const max = 1600, s = Math.min(1, max / Math.max(sw, sh));
+    const c = document.createElement('canvas'); c.width = Math.round(sw * s); c.height = Math.round(sh * s);
+    const ctx = c.getContext('2d');
+    if (mirror) { ctx.translate(c.width, 0); ctx.scale(-1, 1); }
+    ctx.drawImage(source, 0, 0, c.width, c.height);
+    return c.toDataURL('image/jpeg', 0.9);
+  }
+  // Foto com acessórios + moldura
+  function compose(source, sw, sh, mirror, fx) {
     const c = document.createElement('canvas');
     c.width = F.W; c.height = F.H;
     const ctx = c.getContext('2d');
-    const { x, y, w, h } = F.HOLE;
+    const { x, y, w, h } = hole();
     const scale = Math.max(w / sw, h / sh);
-    const dw = sw * scale, dh = sh * scale;
-    ctx.fillStyle = '#000';
-    ctx.fillRect(x, y, w, h);
+    const dw = sw * scale, dh = sh * scale, ox = x + (w - dw) / 2, oy = y + (h - dh) / 2;
+    ctx.fillStyle = '#000'; ctx.fillRect(x, y, w, h);
     ctx.save();
     ctx.beginPath(); ctx.rect(x, y, w, h); ctx.clip();
     if (mirror) { ctx.translate(x + w / 2, 0); ctx.scale(-1, 1); ctx.translate(-(x + w / 2), 0); }
-    ctx.drawImage(source, x + (w - dw) / 2, y + (h - dh) / 2, dw, dh);
+    ctx.drawImage(source, ox, oy, dw, dh);
+    if (fx && fx.length) A.desenhar(ctx, fx, fxKind, (p) => ({ x: ox + p.x * scale, y: oy + p.y * scale }));
     ctx.restore();
     ctx.drawImage(frameImg, 0, 0, F.W, F.H);
     return c.toDataURL('image/jpeg', 0.88);
   }
 
-  function goReview(data) {
-    photoData = data;
-    $('preview').src = data;
+  function goReview() {
+    stickers = []; selSticker = null;
+    $('preview').src = basePhoto;
+    renderStickers();
     showErr($('err2'), '');
     show('review');
   }
 
-  $('start').onclick = async () => {
-    showErr($('err1'), '');
+  // ---------- Fluxo ----------
+  $('start').onclick = () => {
     try { localStorage.setItem('mural-name', getName()); } catch {}
-    try { await prepareFrame(); } catch { return showErr($('err1'), 'Não foi possível carregar a moldura. Recarregue a página.'); }
+    renderFrames(); show('choose');
+  };
+  $('backWelcome').onclick = () => show('welcome');
+  $('openCam').onclick = async () => {
+    showErr($('err0'), '');
+    try { await prepareFrame(); } catch { return showErr($('err0'), 'Não foi possível carregar a moldura. Recarregue a página.'); }
     if (liveCameraOk()) {
-      try { await startCamera(); show('camera'); return; }
+      try { await startCamera(); renderChips(); show('camera'); return; }
       catch (e) { console.warn('Câmera ao vivo indisponível, usando câmera do sistema', e); }
     }
-    $('fileInput').value = '';
-    $('fileInput').click();
+    $('fileInput').value = ''; $('fileInput').click();
   };
+  $('changeFrame').onclick = () => { stopCamera(); renderFrames(); show('choose'); };
 
-  // Alternativa: câmera nativa do celular (funciona mesmo sem HTTPS)
+  // Alternativa: câmera nativa do celular
   $('fileInput').onchange = () => {
     const file = $('fileInput').files[0];
     if (!file) return;
     const url = URL.createObjectURL(file);
     const img = new Image();
-    img.onload = () => { goReview(compose(img, img.naturalWidth, img.naturalHeight, false)); URL.revokeObjectURL(url); };
-    img.onerror = () => showErr($('err1'), 'Não consegui ler essa foto. Tente novamente.');
+    img.onload = () => {
+      basePhoto = compose(img, img.naturalWidth, img.naturalHeight, false, []);
+      rawPhoto = rawImage(img, img.naturalWidth, img.naturalHeight, false);
+      URL.revokeObjectURL(url); goReview();
+    };
+    img.onerror = () => showErr($('err0'), 'Não consegui ler essa foto. Tente novamente.');
     img.src = url;
   };
 
@@ -269,38 +419,96 @@
     el.textContent = '';
     const fl = $('flash'); fl.classList.remove('go'); void fl.offsetWidth; fl.classList.add('go');
     const v = $('video');
-    const data = compose(v, v.videoWidth, v.videoHeight, facing === 'user');
+    const mirror = facing === 'user';
+    const fx = fxKind !== 'nenhum' && A.pronto() ? A.detectar(v, v.videoWidth, v.videoHeight) : [];
+    basePhoto = compose(v, v.videoWidth, v.videoHeight, mirror, fx.length ? fx : faces);
+    rawPhoto = rawImage(v, v.videoWidth, v.videoHeight, mirror);
     busy = false;
     stopCamera();
-    goReview(data);
+    goReview();
   };
-
   $('flip').onclick = async () => {
     facing = facing === 'user' ? 'environment' : 'user';
     try { await startCamera(); } catch { facing = 'user'; await startCamera().catch(() => {}); }
   };
-  $('back').onclick = () => { stopCamera(); show('welcome'); };
-
+  $('back').onclick = () => { stopCamera(); renderFrames(); show('choose'); };
   $('retake').onclick = async () => {
-    if (liveCameraOk()) {
-      try { await startCamera(); show('camera'); return; } catch {}
-    }
-    $('fileInput').value = '';
-    $('fileInput').click();
+    if (liveCameraOk()) { try { await startCamera(); renderChips(); show('camera'); return; } catch {} }
+    $('fileInput').value = ''; $('fileInput').click();
   };
 
+  // ---------- Figurinhas ----------
+  STICKERS.forEach((e) => {
+    const b = document.createElement('button'); b.textContent = e;
+    b.onclick = () => { stickers.push({ e, x: 0.5, y: 0.45, s: 0.16 }); selSticker = stickers.length - 1; renderStickers(); };
+    $('stickerBar').appendChild(b);
+  });
+  function renderStickers() {
+    const wrap = $('photoWrap');
+    wrap.querySelectorAll('.sticker').forEach((n) => n.remove());
+    const W = wrap.clientWidth || 300;
+    stickers.forEach((st, i) => {
+      const d = document.createElement('div');
+      d.className = 'sticker' + (i === selSticker ? ' sel' : '');
+      d.textContent = st.e;
+      d.style.left = st.x * 100 + '%'; d.style.top = st.y * 100 + '%'; d.style.fontSize = (st.s * W) + 'px';
+      d.onpointerdown = (ev) => {
+        ev.preventDefault(); selSticker = i; d.setPointerCapture(ev.pointerId);
+        wrap.querySelectorAll('.sticker').forEach((n, j) => n.classList.toggle('sel', j === i));
+        $('stTools').classList.add('show');
+        const r = wrap.getBoundingClientRect();
+        d.onpointermove = (m) => {
+          st.x = Math.min(1, Math.max(0, (m.clientX - r.left) / r.width));
+          st.y = Math.min(1, Math.max(0, (m.clientY - r.top) / r.height));
+          d.style.left = st.x * 100 + '%'; d.style.top = st.y * 100 + '%';
+        };
+        d.onpointerup = () => { d.onpointermove = null; };
+      };
+      wrap.appendChild(d);
+    });
+    $('stTools').classList.toggle('show', selSticker != null && !!stickers[selSticker]);
+  }
+  window.addEventListener('resize', () => { if ($('review').classList.contains('active')) renderStickers(); });
+  $('stBigger').onclick = () => { const s = stickers[selSticker]; if (s) { s.s = Math.min(0.6, s.s * 1.25); renderStickers(); } };
+  $('stSmaller').onclick = () => { const s = stickers[selSticker]; if (s) { s.s = Math.max(0.05, s.s / 1.25); renderStickers(); } };
+  $('stRemove').onclick = () => { if (stickers[selSticker]) { stickers.splice(selSticker, 1); selSticker = null; renderStickers(); } };
+
+  // Junta foto + figurinhas numa imagem final
+  function withStickers() {
+    if (!stickers.length) return Promise.resolve(basePhoto);
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => {
+        const c = document.createElement('canvas'); c.width = F.W; c.height = F.H;
+        const ctx = c.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        stickers.forEach((st) => { ctx.font = `${Math.round(st.s * F.W)}px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif`; ctx.fillText(st.e, st.x * F.W, st.y * F.H); });
+        resolve(c.toDataURL('image/jpeg', 0.88));
+      };
+      img.src = basePhoto;
+    });
+  }
+
+  // ---------- Recado e envio ----------
+  $('message').oninput = () => { $('msgCount').textContent = $('message').value.length; };
   $('send').onclick = async () => {
     const btn = $('send');
     btn.disabled = true;
     btn.innerHTML = '<span class="spinner"></span> Enviando…';
     showErr($('err2'), '');
     try {
+      finalPhoto = await withStickers();
+      const message = $('message').value.trim();
       const r = await fetch('/api/photos', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ image: photoData, name: getName() }),
+        body: JSON.stringify({ image: finalPhoto, raw: rawPhoto, name: getName(), message, frame: frameId }),
       });
       if (!r.ok) throw new Error();
-      $('finalImg').src = photoData;
+      $('finalImg').src = finalPhoto;
+      $('msgDone').textContent = message ? `“${message}”` : '';
+      $('msgDone').style.display = message ? 'block' : 'none';
+      $('message').value = ''; $('msgCount').textContent = '0';
       show('done');
     } catch {
       showErr($('err2'), 'Ops! Não conseguimos enviar. Verifique a conexão e tente de novo.');
@@ -312,7 +520,7 @@
 
   $('save').onclick = async () => {
     try {
-      const blob = await (await fetch(photoData)).blob();
+      const blob = await (await fetch(finalPhoto)).blob();
       const file = new File([blob], window.PAINEL.arquivoFoto + '.jpg', { type: 'image/jpeg' });
       if (navigator.canShare && navigator.canShare({ files: [file] })) {
         await navigator.share({ files: [file], title: 'Minha foto no ' + window.PAINEL.nome });
@@ -320,11 +528,10 @@
       }
     } catch (e) { if (e && e.name === 'AbortError') return; }
     const a = document.createElement('a');
-    a.href = photoData; a.download = window.PAINEL.arquivoFoto + '.jpg';
+    a.href = finalPhoto; a.download = window.PAINEL.arquivoFoto + '.jpg';
     document.body.appendChild(a); a.click(); a.remove();
   };
-
-  $('again').onclick = () => show('welcome');
+  $('again').onclick = () => { renderFrames(); show('choose'); };
 })();
 </script>
 </body>

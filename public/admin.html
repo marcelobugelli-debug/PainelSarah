@@ -56,6 +56,10 @@
   .meta div { min-width: 0; flex: 1; }
   .meta strong { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .meta span { font-size: 13px; color: var(--muted); }
+  .item .note { margin: 0 12px; padding: 8px 10px; background: #F6F5FB; border-radius: 10px; font-size: 14px; font-style: italic; color: var(--ink); overflow-wrap: anywhere; }
+  .tools { max-width: 1280px; margin: 0 auto; padding: 16px 16px 0; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  .tools p { margin: 0 auto 0 0; color: var(--muted); font-size: 14px; }
+  .sheet .confirm-input { width: 100%; padding: 12px 14px; font: inherit; font-size: 16px; border: 2px solid var(--line); border-radius: 12px; margin-bottom: 14px; text-align: center; }
   .del { width: 40px; height: 40px; flex: none; border-radius: 12px; border: 0; background: #FDE8E8; color: var(--danger); cursor: pointer; display: grid; place-items: center; }
   .del:hover { background: var(--danger); color: #fff; }
   .del svg { width: 20px; height: 20px; }
@@ -97,6 +101,11 @@
       <button class="btn btn-ghost" id="logout">Sair</button>
     </div>
   </header>
+  <div class="tools">
+    <p>Fim da festa? Baixe tudo primeiro e depois apague.</p>
+    <button class="btn btn-primary" id="download">⬇ Baixar todas as fotos (.zip)</button>
+    <button class="btn btn-danger" id="wipe">Apagar tudo</button>
+  </div>
   <main><div class="grid" id="grid"></div></main>
 </section>
 
@@ -108,6 +117,17 @@
     <div class="row">
       <button class="btn btn-ghost" id="mCancel">Cancelar</button>
       <button class="btn btn-danger" id="mDelete">Remover</button>
+    </div>
+  </div>
+</div>
+<div class="modal" id="wipeModal">
+  <div class="sheet">
+    <h2>Apagar todas as fotos?</h2>
+    <p>Apaga <b id="wipeCount">0</b> fotos (com e sem moldura) e todos os recados do servidor e do telão. <b>Não dá para desfazer.</b> Baixe o .zip antes!</p>
+    <input class="confirm-input" id="wipeConfirm" placeholder="Digite APAGAR para confirmar" autocomplete="off">
+    <div class="row">
+      <button class="btn btn-ghost" id="wipeCancel">Cancelar</button>
+      <button class="btn btn-danger" id="wipeGo" disabled>Apagar tudo</button>
     </div>
   </div>
 </div>
@@ -161,6 +181,7 @@
     el.className = 'item' + (fresh ? ' fresh' : '');
     el.dataset.id = p.id;
     el.innerHTML = `<img src="${p.url}" alt="" loading="lazy">
+      ${p.message ? `<div class="note" style="margin-top:10px">“${esc(p.message)}”</div>` : ''}
       <div class="meta"><div><strong>${p.name ? esc(p.name) : 'Sem nome'}</strong><span>${when(p.createdAt)}</span></div>
       <button class="del" title="Remover foto" aria-label="Remover foto"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16"/><path d="M10 11v6M14 11v6"/><path d="M6 7l1 13h10l1-13"/><path d="M9 7V4h6v3"/></svg></button></div>`;
     el.querySelector('img').onclick = () => ask(p);
@@ -172,7 +193,7 @@
     $('count').textContent = photos.length;
     const g = $('grid');
     g.innerHTML = '';
-    if (!photos.length) { g.innerHTML = '<div class="empty" style="grid-column:1/-1">Nenhuma foto ainda. Elas aparecem aqui em tempo real. 🧡</div>'; return; }
+    if (!photos.length) { g.innerHTML = '<div class="empty" style="grid-column:1/-1">Nenhuma foto ainda. Elas aparecem aqui em tempo real. 📸</div>'; return; }
     photos.forEach((p) => g.appendChild(card(p)));
   }
 
@@ -185,7 +206,34 @@
   const close = () => { $('modal').classList.remove('on'); pending = null; };
   $('mCancel').onclick = close;
   $('modal').onclick = (e) => { if (e.target === $('modal')) close(); };
-  addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
+  addEventListener('keydown', (e) => { if (e.key === 'Escape') { close(); closeWipe(); } });
+
+  // Download de tudo (.zip com pastas com-moldura, sem-moldura e os recados)
+  $('download').onclick = () => {
+    if (!photos.length) return toast('Ainda não há fotos para baixar');
+    const a = document.createElement('a');
+    a.href = `/api/admin/export?key=${encodeURIComponent(key)}`;
+    document.body.appendChild(a); a.click(); a.remove();
+    toast('Preparando o download…');
+  };
+
+  // Apagar tudo, com confirmação
+  const closeWipe = () => { $('wipeModal').classList.remove('on'); $('wipeConfirm').value = ''; $('wipeGo').disabled = true; };
+  $('wipe').onclick = () => { $('wipeCount').textContent = photos.length; $('wipeModal').classList.add('on'); setTimeout(() => $('wipeConfirm').focus(), 50); };
+  $('wipeCancel').onclick = closeWipe;
+  $('wipeModal').onclick = (e) => { if (e.target === $('wipeModal')) closeWipe(); };
+  $('wipeConfirm').oninput = () => { $('wipeGo').disabled = $('wipeConfirm').value.trim().toUpperCase() !== 'APAGAR'; };
+  $('wipeGo').onclick = async () => {
+    $('wipeGo').disabled = true;
+    try {
+      const r = await fetch('/api/admin/all', { method: 'DELETE', headers: { 'X-Admin-Key': key } });
+      if (r.status === 403) { toast('Sessão expirada, entre de novo'); return setTimeout(() => $('logout').click(), 1200); }
+      if (!r.ok) throw new Error();
+      const { removed } = await r.json();
+      photos = []; render(); closeWipe();
+      toast(`${removed} fotos apagadas`);
+    } catch { toast('Não foi possível apagar. Tente de novo.'); $('wipeGo').disabled = false; }
+  };
 
   $('mDelete').onclick = async () => {
     if (!pending) return;
@@ -226,6 +274,7 @@
       photos = photos.filter((x) => x.id !== id);
       render();
     });
+    es.addEventListener('reset', () => { photos = []; render(); });
   }
 
   if (key) login(key).then(openPanel).catch(() => { try { sessionStorage.removeItem('mural-admin'); } catch {} key = ''; });

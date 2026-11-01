@@ -20,8 +20,8 @@
   /* Fundo animado */
   .bg { position: fixed; inset: 0; overflow: hidden; z-index: 0; }
   .blob { position: absolute; border-radius: 50%; filter: blur(90px); opacity: .55; animation: drift 22s ease-in-out infinite alternate; }
-  .b1 { width: 55vw; height: 55vw; left: -15vw; top: -20vw; background: #6C5CE7; }
-  .b2 { width: 45vw; height: 45vw; right: -12vw; bottom: -18vw; background: #8E7CF0; animation-delay: -7s; }
+  .b1 { width: 55vw; height: 55vw; left: -15vw; top: -20vw; background: var(--accent); }
+  .b2 { width: 45vw; height: 45vw; right: -12vw; bottom: -18vw; background: var(--accent-2); animation-delay: -7s; }
   .b3 { width: 30vw; height: 30vw; left: 40vw; top: 50vh; background: var(--accent-deep); animation-delay: -14s; opacity: .45; }
   @keyframes drift { to { transform: translate(6vw, 4vh) scale(1.15); } }
   .grain { position: absolute; inset: 0; background-image: radial-gradient(#ffffff10 1px, transparent 1px); background-size: 22px 22px; }
@@ -29,11 +29,11 @@
   .app { position: relative; z-index: 1; height: 100vh; display: grid; grid-template-columns: 1fr var(--side); gap: 2.2vw; padding: 2.4vw; }
 
   /* Cabeçalho + mural */
-  .main { display: flex; flex-direction: column; min-width: 0; min-height: 0; }
+  .main { position: relative; display: flex; flex-direction: column; min-width: 0; min-height: 0; }
   header { display: flex; align-items: center; justify-content: space-between; gap: 2vw; margin-bottom: 1.8vw; }
   .title { display: flex; align-items: center; gap: 1.2vw; }
   .logo { width: 4.6vw; height: 4.6vw; min-width: 56px; min-height: 56px; border-radius: 1.3vw; background: radial-gradient(circle at 30% 25%, #FFFFFF, #E6E2FA 60%, #C9C0F5); display: grid; place-items: center; box-shadow: 0 10px 30px -10px #6C5CE7; overflow: hidden; }
-  .logo svg { width: 84%; margin-top: 8%; }
+  .logo svg { width: 84%; }
   h1 { margin: 0; font-size: clamp(30px, 3.4vw, 72px); font-weight: 900; letter-spacing: .04em; line-height: 1; }
   h1 span { color: var(--accent); }
   .tag { margin: .4vw 0 0; color: var(--muted); font-size: clamp(14px, 1.25vw, 26px); font-weight: 600; }
@@ -44,6 +44,7 @@
   .wall { flex: 1; min-height: 0; display: grid; gap: 1.4vw; align-content: center; justify-content: center; }
   .card { position: relative; aspect-ratio: 2 / 3; border-radius: .9vw; overflow: hidden; background: #2a1408; box-shadow: 0 1.2vw 2.4vw -1vw #000c; transform: rotate(var(--rot, 0deg)); transition: transform .5s ease; }
   .card img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .card .msg { position: absolute; left: 0; right: 0; bottom: 0; padding: 2.2em .7em .6em; font-size: clamp(10px, .85vw, 18px); font-weight: 600; line-height: 1.25; color: #fff; background: linear-gradient(transparent, #000c); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
   .card.enter { animation: cardIn .8s cubic-bezier(.2,1.3,.4,1) both; }
   .card.swap img { animation: swap .9s ease both; }
   @keyframes cardIn { from { opacity: 0; transform: scale(.4) rotate(-12deg); } }
@@ -80,6 +81,24 @@
   .spot-text h3 { font-size: clamp(36px, 4.6vw, 100px); font-weight: 900; line-height: 1.02; margin: 1.2vw 0 .8vw; }
   .spot-text h3 span { color: var(--accent-2); }
   .spot-text p { font-size: clamp(16px, 1.6vw, 34px); color: var(--muted); margin: 0; }
+  .spot-text blockquote, .show-text blockquote { margin: 0 0 1.4vw; font-size: clamp(20px, 2.3vw, 52px); font-weight: 700; line-height: 1.2; color: #fff; background: #ffffff12; border-left: .5vw solid var(--accent-2); border-radius: 1vw; padding: 1.2vw 1.5vw; }
+  .spot-text blockquote:empty, .show-text blockquote:empty { display: none; }
+
+  /* Vitrine: passa as fotos antigas quando não chegam novas (o QR Code continua visível) */
+  .showcase { position: absolute; inset: -1vw; z-index: 4; display: flex; align-items: center; justify-content: center; gap: 3vw; padding: 1vw; background: var(--bg); border-radius: 1.4vw; opacity: 0; pointer-events: none; transition: opacity .8s ease; }
+  .showcase.on { opacity: 1; }
+  .showcase img { height: min(78vh, 100%); aspect-ratio: 2 / 3; object-fit: cover; border-radius: 1.2vw; box-shadow: 0 0 0 .4vw #fff, 0 2.5vw 6vw -2vw var(--accent); transition: opacity .7s ease, transform .9s ease; }
+  .showcase img.out { opacity: 0; transform: scale(.94) rotate(-2deg); }
+  .show-text { max-width: 30vw; transition: opacity .7s ease; }
+  .show-text.out { opacity: 0; }
+  .show-text small { display: inline-block; background: #ffffff1a; color: var(--accent-2); font-weight: 800; letter-spacing: .14em; text-transform: uppercase; padding: .5vw 1.1vw; border-radius: 99px; font-size: clamp(12px, 1vw, 20px); }
+  .show-text h3 { font-size: clamp(30px, 3.6vw, 80px); font-weight: 900; line-height: 1.05; margin: 1vw 0; }
+  .show-text h3 span { color: var(--accent-2); }
+
+  /* Botão para liberar o som (navegadores exigem um clique) */
+  .sound-btn { position: fixed; left: 50%; bottom: 2vw; transform: translateX(-50%); z-index: 30; border: 0; border-radius: 99px; padding: 14px 26px; background: #fff; color: var(--ink); font: inherit; font-size: clamp(14px, 1.2vw, 22px); font-weight: 800; cursor: pointer; box-shadow: 0 10px 30px -8px #000a; animation: nudge 1.6s ease-in-out infinite; }
+  .sound-btn.hide { display: none; }
+  @keyframes nudge { 50% { transform: translateX(-50%) scale(1.06); } }
   .confetti { position: fixed; inset: 0; z-index: 11; pointer-events: none; }
 
   .fs-btn { position: fixed; right: 1vw; bottom: 1vw; z-index: 20; border: 0; border-radius: 99px; padding: 8px 14px; background: #ffffff14; color: #fff; font: inherit; font-size: 13px; cursor: pointer; opacity: 0; transition: opacity .3s; }
@@ -106,6 +125,14 @@
       <div class="counter"><b id="count">0</b><small>participantes</small></div>
     </header>
     <div class="wall" id="wall"></div>
+    <div class="showcase" id="showcase">
+      <img id="showImg" alt="">
+      <div class="show-text" id="showText">
+        <small>Relembrando 💜</small>
+        <h3 id="showName"></h3>
+        <blockquote id="showMsg"></blockquote>
+      </div>
+    </div>
   </section>
 
   <aside>
@@ -128,12 +155,14 @@
     <div class="spot-text">
       <small>Nova foto no mural</small>
       <h3 id="spotName"></h3>
+      <blockquote id="spotMsg"></blockquote>
       <p data-cfg="agradecimento"></p>
     </div>
   </div>
 </div>
 <canvas class="confetti" id="confetti"></canvas>
 <button class="fs-btn" id="fs">Tela cheia (F)</button>
+<button class="sound-btn" id="soundBtn">🔊 Clique aqui para ativar o som da festa</button>
 
 <script src="/vendor/qrcode.min.js"></script>
 <script src="/frame.js"></script>
@@ -178,6 +207,7 @@
     d.style.setProperty('--rot', rot());
     const img = new Image(); img.src = p.url; img.alt = p.name || 'Participante';
     d.appendChild(img);
+    if (p.message) { const m = document.createElement('div'); m.className = 'msg'; m.textContent = `“${p.message}”`; d.appendChild(m); }
     return d;
   }
 
@@ -216,7 +246,7 @@
     const img = new Image();
     img.onload = () => {
       card.classList.remove('swap'); void card.offsetWidth; card.classList.add('swap');
-      card.replaceChildren(img); card.dataset.id = p.id; shown[idx] = p.id;
+      card.replaceChildren(...cardEl(p).childNodes); card.dataset.id = p.id; shown[idx] = p.id;
     };
     img.src = p.url; img.alt = p.name || 'Participante';
   }, 5000);
@@ -224,22 +254,24 @@
   // Destaque de nova foto
   function spotlight(p) {
     queue.push(p);
+    stopShowcase();
     if (!spotlightBusy) nextSpot();
   }
   function nextSpot() {
     const p = queue.shift();
-    if (!p) { spotlightBusy = false; return; }
+    if (!p) { spotlightBusy = false; scheduleShowcase(); return; }
     spotlightBusy = true;
     const img = $('spotImg');
     img.onload = () => {
       $('spotName').innerHTML = p.name ? `Olá, <span>${escapeHtml(p.name)}</span>!` : 'Mais um <span>participante!</span>';
+      $('spotMsg').textContent = p.message ? `“${p.message}”` : '';
       $('spot').classList.add('on');
-      burst();
+      celebrate();
       setTimeout(() => {
         $('spot').classList.remove('on');
         addToWall(p);
         setTimeout(nextSpot, 900);
-      }, 5500);
+      }, p.message ? 8000 : 6000);
     };
     img.onerror = () => { addToWall(p); nextSpot(); };
     img.src = p.url;
@@ -250,7 +282,7 @@
   const cv = $('confetti'), cx = cv.getContext('2d');
   let parts = [], raf = null;
   function burst() {
-    cv.width = innerWidth; cv.height = innerHeight;
+    if (cv.width !== innerWidth || cv.height !== innerHeight) { cv.width = innerWidth; cv.height = innerHeight; }
     const K = window.PAINEL.cores; const colors = [K.destaque, K.destaqueClaro, '#FFD27A', '#FFFFFF', K.destaqueEscuro];
     for (let i = 0; i < 220; i++) {
       parts.push({
@@ -263,13 +295,118 @@
   }
   function tick() {
     cx.clearRect(0, 0, cv.width, cv.height);
-    parts = parts.filter((p) => p.y < cv.height + 40 && p.life < 260);
+    parts = parts.filter((p) => p.y < cv.height + 40 && p.life < (p.fw ? 75 : 260));
     for (const p of parts) {
+      if (p.fw) {
+        p.vy += .08; p.vx *= .97; p.vy *= .97; p.x += p.vx; p.y += p.vy; p.life++;
+        cx.globalAlpha = Math.max(0, 1 - p.life / 75); cx.fillStyle = p.c;
+        cx.beginPath(); cx.arc(p.x, p.y, p.r, 0, 7); cx.fill(); cx.globalAlpha = 1;
+        continue;
+      }
       p.vy += .5; p.vx *= .99; p.x += p.vx; p.y += p.vy; p.a += p.va; p.life++;
       cx.save(); cx.translate(p.x, p.y); cx.rotate(p.a); cx.fillStyle = p.c;
       cx.fillRect(-p.r / 2, -p.r / 4, p.r, p.r / 2); cx.restore();
     }
     raf = parts.length ? requestAnimationFrame(tick) : (cx.clearRect(0, 0, cv.width, cv.height), null);
+  }
+
+  // ---------- Fogos de artifício ----------
+  function fireworks() {
+    const K = window.PAINEL.cores; const colors = [K.destaqueClaro, '#FFD27A', '#FF8FB1', '#7EE0C3', '#FFFFFF'];
+    for (let n = 0; n < 6; n++) {
+      setTimeout(() => {
+        cv.width = cv.width || innerWidth; cv.height = cv.height || innerHeight;
+        const x = innerWidth * (0.12 + Math.random() * 0.76), y = innerHeight * (0.12 + Math.random() * 0.35);
+        const c = colors[Math.floor(Math.random() * colors.length)];
+        for (let i = 0; i < 80; i++) {
+          const a = (Math.PI * 2 * i) / 80, sp = 4 + Math.random() * 7;
+          parts.push({ fw: true, x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, r: 3 + Math.random() * 3, c, life: 0 });
+        }
+        sfx.pop();
+        if (!raf) tick();
+      }, 350 + n * 520);
+    }
+  }
+  function celebrate() { burst(); fireworks(); sfx.fanfare(); }
+
+  // ---------- Som (gerado no navegador; dá para trocar por um arquivo em config.js) ----------
+  const sfx = (() => {
+    let ac = null, enabled = false;
+    const custom = window.PAINEL.somComemoracao ? new Audio(window.PAINEL.somComemoracao) : null;
+    function enable() {
+      enabled = true;
+      try { ac = ac || new (window.AudioContext || window.webkitAudioContext)(); ac.resume(); } catch {}
+      if (custom) { custom.volume = 0.0001; custom.play().then(() => { custom.pause(); custom.currentTime = 0; custom.volume = 1; }).catch(() => {}); }
+    }
+    function note(freq, t, dur, type = 'triangle', vol = 0.18) {
+      const o = ac.createOscillator(), g = ac.createGain();
+      o.type = type; o.frequency.value = freq;
+      g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vol, t + 0.02); g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+      o.connect(g).connect(ac.destination); o.start(t); o.stop(t + dur + 0.05);
+    }
+    function fanfare() {
+      if (!enabled) return;
+      if (custom) { custom.currentTime = 0; custom.play().catch(() => {}); return; }
+      if (!ac) return;
+      const t = ac.currentTime + 0.05, C5 = 523.25, E5 = 659.25, G5 = 783.99, C6 = 1046.5, A5 = 880, F5 = 698.46;
+      [[C5, 0], [E5, .14], [G5, .28], [C6, .42]].forEach(([f, d]) => note(f, t + d, .22, 'square', .07));
+      [[G5, .7], [A5, .82], [G5, .94], [F5, 1.06], [E5, 1.18], [G5, 1.3]].forEach(([f, d]) => note(f, t + d, .16, 'triangle', .16));
+      [C5, E5, G5, C6].forEach((f) => note(f, t + 1.5, 1.4, 'triangle', .1));
+      [C5 / 2, G5 / 2].forEach((f) => note(f, t + 1.5, 1.4, 'sine', .14));
+    }
+    function pop() {
+      if (!enabled || !ac || custom) return;
+      const len = ac.sampleRate * 0.35, buf = ac.createBuffer(1, len, ac.sampleRate), d = buf.getChannelData(0);
+      for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 3);
+      const src = ac.createBufferSource(), g = ac.createGain(), f = ac.createBiquadFilter();
+      f.type = 'lowpass'; f.frequency.value = 1400; g.gain.value = 0.35;
+      src.buffer = buf; src.connect(f).connect(g).connect(ac.destination); src.start();
+    }
+    return { enable, fanfare, pop };
+  })();
+  function unlockSound() { sfx.enable(); $('soundBtn').classList.add('hide'); sfx.fanfare(); }
+  $('soundBtn').onclick = (e) => { e.stopPropagation(); unlockSound(); };
+  addEventListener('keydown', (e) => { if (e.key !== 'f' && e.key !== 'F' && !$('soundBtn').classList.contains('hide')) unlockSound(); });
+
+  // ---------- Vitrine (carrossel das fotos antigas) ----------
+  const WAIT = (window.PAINEL.carrosselEsperaSegundos ?? 20) * 1000, EACH = (window.PAINEL.carrosselTrocaSegundos ?? 7) * 1000;
+  let idleT = null, showT = null, showing = false, lastShown = null;
+  function scheduleShowcase() {
+    clearTimeout(idleT);
+    if (WAIT <= 0) return;
+    idleT = setTimeout(startShowcase, WAIT);
+  }
+  function startShowcase() {
+    if (spotlightBusy || !photos.length) return scheduleShowcase();
+    showing = true; nextShow(true);
+  }
+  function nextShow(first) {
+    if (!showing) return;
+    const pool = photos.length > 1 ? photos.filter((p) => p.id !== lastShown) : photos;
+    const p = pool[Math.floor(Math.random() * pool.length)];
+    if (!p) return stopShowcase();
+    if (!first && p.id === lastShown) { showT = setTimeout(() => nextShow(false), EACH); return; }
+    lastShown = p.id;
+    const img = $('showImg'), txt = $('showText');
+    img.classList.add('out'); txt.classList.add('out');
+    setTimeout(() => {
+      const pre = new Image();
+      pre.onload = () => {
+        if (!showing) return;
+        img.src = p.url;
+        $('showName').innerHTML = p.name ? `<span>${escapeHtml(p.name)}</span>` : 'Um convidado';
+        $('showMsg').textContent = p.message ? `“${p.message}”` : '';
+        $('showcase').classList.add('on');
+        img.classList.remove('out'); txt.classList.remove('out');
+        showT = setTimeout(() => nextShow(false), EACH);
+      };
+      pre.onerror = () => { showT = setTimeout(() => nextShow(false), 500); };
+      pre.src = p.url;
+    }, first ? 0 : 700);
+  }
+  function stopShowcase() {
+    showing = false; clearTimeout(showT); clearTimeout(idleT);
+    $('showcase').classList.remove('on');
   }
 
   // Dados + tempo real
@@ -283,6 +420,7 @@
     new QRCode($('qr'), { text: info.captureUrl, width: 512, height: 512, colorDark: '#1E1B2E', colorLight: '#FFFFFF', correctLevel: QRCode.CorrectLevel.M });
     photos = list.slice().reverse();
     render();
+    scheduleShowcase();
   }
 
   function connect() {
@@ -299,8 +437,10 @@
     es.addEventListener('remove', (e) => {
       const { id } = JSON.parse(e.data);
       photos = photos.filter((p) => p.id !== id);
+      if (lastShown === id && showing) { clearTimeout(showT); nextShow(false); }
       render();
     });
+    es.addEventListener('reset', () => { photos = []; stopShowcase(); render(); });
   }
 
   let rt; addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(render, 200); });

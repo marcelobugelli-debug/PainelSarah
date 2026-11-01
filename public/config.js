@@ -36,6 +36,18 @@ window.PAINEL = {
 
   // Nome do arquivo quando o convidado salva a foto
   arquivoFoto: 'minha-foto',
+
+  // Figurinhas que o convidado pode colocar na foto
+  figurinhas: ['🎉', '🎂', '🥳', '💖', '⭐', '🌈', '🦄', '😂', '😎', '🔥', '👑', '🎈', '✨', '🐱', '🍕', '💜'],
+
+  // Vitrine no telão: depois de quantos segundos sem foto nova começa a passar as antigas,
+  // e quanto tempo cada uma fica. Use 0 em carrosselEsperaSegundos para desligar.
+  carrosselEsperaSegundos: 20,
+  carrosselTrocaSegundos: 7,
+
+  // Música da comemoração. Deixe '' para usar a fanfarra gerada pelo próprio telão,
+  // ou coloque um arquivo em public/ (ex.: '/musica.mp3').
+  somComemoracao: '',
 };
 
 // ---- Aplica a configuração nas páginas (não precisa editar abaixo) ----

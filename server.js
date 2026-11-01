@@ -1,4 +1,4 @@
-// Servidor do Mural Orquestra AI — sem dependências externas.
+// Servidor do mural de fotos (PainelSarah) — sem dependências externas.
 // Uso: node server.js   (porta padrão 3000; PUBLIC_URL para usar um túnel HTTPS)
 const http = require('http');
 const fs = require('fs');
@@ -12,10 +12,12 @@ const ADMIN_KEY = process.env.ADMIN_KEY || '';
 const PUBLIC_DIR = path.join(__dirname, 'public');
 const DATA_DIR = path.join(__dirname, 'data');
 const PHOTO_DIR = path.join(DATA_DIR, 'photos');
+const RAW_DIR = path.join(DATA_DIR, 'originais');
 const DB_FILE = path.join(DATA_DIR, 'photos.json');
-const MAX_BODY = 12 * 1024 * 1024;
+const MAX_BODY = 24 * 1024 * 1024;
 
 fs.mkdirSync(PHOTO_DIR, { recursive: true });
+fs.mkdirSync(RAW_DIR, { recursive: true });
 let photos = [];
 try { photos = JSON.parse(fs.readFileSync(DB_FILE, 'utf8')); } catch { photos = []; }
 const saveDb = () => fs.writeFileSync(DB_FILE, JSON.stringify(photos, null, 2));
@@ -78,7 +80,43 @@ function isAdmin(req) {
   return ADMIN_KEY && given.length === real.length && crypto.timingSafeEqual(given, real);
 }
 
-const cleanName =(s) => String(s || '').replace(/[<>]/g, '').trim().slice(0, 40);
+const cleanName = (s) => String(s || '').replace(/[<>]/g, '').trim().slice(0, 40);
+const cleanMsg = (s) => String(s || '').replace(/[<>]/g, '').replace(/\s+/g, ' ').trim().slice(0, 140);
+const jpeg = (d) => { const m = /^data:image\/jpeg;base64,(.+)$/.exec(d || ''); return m ? Buffer.from(m[1], 'base64') : null; };
+
+// ---- ZIP sem dependências (arquivos guardados sem compressão; JPEG já é comprimido) ----
+const CRC_TABLE = new Uint32Array(256).map((_, n) => { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; return c >>> 0; });
+function crc32(buf) { let c = 0xFFFFFFFF; for (let i = 0; i < buf.length; i++) c = CRC_TABLE[(c ^ buf[i]) & 0xFF] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; }
+function streamZip(res, entries) {
+  // entries: [{ name, data: Buffer }] ou [{ name, file }] — escreve um a um para não ocupar memória
+  let offset = 0; const central = [];
+  const now = new Date();
+  const dosTime = (now.getHours() << 11) | (now.getMinutes() << 5) | (now.getSeconds() >> 1);
+  const dosDate = ((now.getFullYear() - 1980) << 9) | ((now.getMonth() + 1) << 5) | now.getDate();
+  for (const e of entries) {
+    let data; try { data = e.data || fs.readFileSync(e.file); } catch { continue; }
+    const name = Buffer.from(e.name, 'utf8'); const crc = crc32(data);
+    const h = Buffer.alloc(30);
+    h.writeUInt32LE(0x04034b50, 0); h.writeUInt16LE(20, 4); h.writeUInt16LE(0x0800, 6); h.writeUInt16LE(0, 8);
+    h.writeUInt16LE(dosTime, 10); h.writeUInt16LE(dosDate, 12); h.writeUInt32LE(crc, 14);
+    h.writeUInt32LE(data.length, 18); h.writeUInt32LE(data.length, 22); h.writeUInt16LE(name.length, 26); h.writeUInt16LE(0, 28);
+    res.write(h); res.write(name); res.write(data);
+    const c = Buffer.alloc(46);
+    c.writeUInt32LE(0x02014b50, 0); c.writeUInt16LE(20, 4); c.writeUInt16LE(20, 6); c.writeUInt16LE(0x0800, 8); c.writeUInt16LE(0, 10);
+    c.writeUInt16LE(dosTime, 12); c.writeUInt16LE(dosDate, 14); c.writeUInt32LE(crc, 16); c.writeUInt32LE(data.length, 20);
+    c.writeUInt32LE(data.length, 24); c.writeUInt16LE(name.length, 28); c.writeUInt32LE(offset, 42);
+    central.push(Buffer.concat([c, name]));
+    offset += 30 + name.length + data.length;
+  }
+  const cd = Buffer.concat(central);
+  const end = Buffer.alloc(22);
+  end.writeUInt32LE(0x06054b50, 0); end.writeUInt16LE(central.length, 8); end.writeUInt16LE(central.length, 10);
+  end.writeUInt32LE(cd.length, 12); end.writeUInt32LE(offset, 16);
+  res.write(cd); res.end(end);
+}
+const csvCell = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+const fileBase = (p, i) => `${String(i + 1).padStart(3, '0')}${p.name ? '-' + p.name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-zA-Z0-9]+/g, '-').replace(/^-|-$/g, '').toLowerCase() : ''}`;
+
 
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, 'http://x');
@@ -93,12 +131,17 @@ const server = http.createServer(async (req, res) => {
 
   if (p === '/api/photos' && req.method === 'POST') {
     try {
-      const { image, name } = JSON.parse(await readBody(req));
-      const m = /^data:image\/jpeg;base64,(.+)$/.exec(image || '');
-      if (!m) return sendJson(res, 400, { error: 'Imagem inválida' });
+      const { image, raw, name, message, frame } = JSON.parse(await readBody(req));
+      const img = jpeg(image);
+      if (!img) return sendJson(res, 400, { error: 'Imagem inválida' });
       const id = Date.now().toString(36) + crypto.randomBytes(3).toString('hex');
-      fs.writeFileSync(path.join(PHOTO_DIR, `${id}.jpg`), Buffer.from(m[1], 'base64'));
-      const photo = { id, name: cleanName(name), url: `/photos/${id}.jpg`, createdAt: new Date().toISOString() };
+      fs.writeFileSync(path.join(PHOTO_DIR, `${id}.jpg`), img);
+      const rawImg = jpeg(raw);
+      if (rawImg) fs.writeFileSync(path.join(RAW_DIR, `${id}.jpg`), rawImg);
+      const photo = {
+        id, name: cleanName(name), message: cleanMsg(message), frame: String(frame || '').slice(0, 30),
+        url: `/photos/${id}.jpg`, hasRaw: !!rawImg, createdAt: new Date().toISOString(),
+      };
       photos.push(photo); saveDb();
       broadcast('photo', photo);
       return sendJson(res, 201, photo);
@@ -120,8 +163,44 @@ const server = http.createServer(async (req, res) => {
     if (photos.length === before) return sendJson(res, 404, { error: 'Não encontrada' });
     saveDb();
     fs.rm(path.join(PHOTO_DIR, `${del[1]}.jpg`), () => {});
+    fs.rm(path.join(RAW_DIR, `${del[1]}.jpg`), () => {});
     broadcast('remove', { id: del[1] });
     return sendJson(res, 200, { ok: true });
+  }
+
+  // Download de tudo: fotos com moldura, sem moldura e os recados
+  if (p === '/api/admin/export' && req.method === 'GET') {
+    const given = { headers: { 'x-admin-key': url.searchParams.get('key') || req.headers['x-admin-key'] } };
+    if (!isAdmin(given)) return sendJson(res, 403, { error: 'Sem permissão' });
+    const stamp = new Date().toISOString().slice(0, 10);
+    res.writeHead(200, { 'Content-Type': 'application/zip', 'Content-Disposition': `attachment; filename="fotos-${stamp}.zip"`, 'Cache-Control': 'no-store' });
+    const entries = [];
+    const rows = [['numero', 'nome', 'recado', 'horario', 'arquivo_com_moldura', 'arquivo_sem_moldura'].map(csvCell).join(';')];
+    let txt = '';
+    photos.forEach((ph, i) => {
+      const base = fileBase(ph, i);
+      entries.push({ name: `com-moldura/${base}.jpg`, file: path.join(PHOTO_DIR, `${ph.id}.jpg`) });
+      if (ph.hasRaw) entries.push({ name: `sem-moldura/${base}.jpg`, file: path.join(RAW_DIR, `${ph.id}.jpg`) });
+      const when = new Date(ph.createdAt).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+      rows.push([i + 1, ph.name, ph.message, when, `com-moldura/${base}.jpg`, ph.hasRaw ? `sem-moldura/${base}.jpg` : ''].map(csvCell).join(';'));
+      if (ph.message) txt += `${ph.name || 'Sem nome'} (${when}):\n${ph.message}\n\n`;
+    });
+    entries.push({ name: 'recados.csv', data: Buffer.from('\ufeff' + rows.join('\r\n'), 'utf8') });
+    entries.push({ name: 'recados.txt', data: Buffer.from(txt || 'Nenhum recado.\n', 'utf8') });
+    return streamZip(res, entries);
+  }
+
+  // Apagar tudo (depois do download)
+  if (p === '/api/admin/all' && req.method === 'DELETE') {
+    if (!isAdmin(req)) return sendJson(res, 403, { error: 'Sem permissão' });
+    const n = photos.length;
+    for (const ph of photos) {
+      fs.rm(path.join(PHOTO_DIR, `${ph.id}.jpg`), () => {});
+      fs.rm(path.join(RAW_DIR, `${ph.id}.jpg`), () => {});
+    }
+    photos = []; saveDb();
+    broadcast('reset', {});
+    return sendJson(res, 200, { ok: true, removed: n });
   }
 
   if (p === '/events') {
@@ -144,7 +223,7 @@ const server = http.createServer(async (req, res) => {
 });
 
 server.listen(PORT, HOST, () => {
-  console.log('\n  Mural Orquestra AI rodando!\n');
+  console.log('\n  Mural de fotos rodando!\n');
   console.log(`  Telão (abra no computador do projetor):  http://localhost:${PORT}/telao`);
   console.log(`  Página do celular (vai no QR Code):     ${PUBLIC_URL}/foto`);
   console.log(`  Moderação:                              ${PUBLIC_URL}/admin${ADMIN_KEY ? '' : '  (defina ADMIN_KEY para ativar)'}\n`);
