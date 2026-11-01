@@ -3,13 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Orquestra AI · Mural do Telão</title>
+<title>Mural · Telão</title>
+<script src="/config.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
 <style>
   :root {
-    --orange: #FF7A00; --orange-2: #FF9A2E; --orange-deep: #E85000;
-    --bg: #140904; --ink: #2B1408; --text: #FFF3E6; --muted: #D9B79A;
+    --accent: #6C5CE7; --accent-2: #8E7CF0; --accent-deep: #4B3BC4;
+    --bg: #0E0C1A; --ink: #1E1B2E; --text: #F3F2FA; --muted: #B9B5D0;
     --side: clamp(260px, 22vw, 400px);
   }
   * { box-sizing: border-box; }
@@ -19,9 +20,9 @@
   /* Fundo animado */
   .bg { position: fixed; inset: 0; overflow: hidden; z-index: 0; }
   .blob { position: absolute; border-radius: 50%; filter: blur(90px); opacity: .55; animation: drift 22s ease-in-out infinite alternate; }
-  .b1 { width: 55vw; height: 55vw; left: -15vw; top: -20vw; background: #FF6A00; }
-  .b2 { width: 45vw; height: 45vw; right: -12vw; bottom: -18vw; background: #FF9A2E; animation-delay: -7s; }
-  .b3 { width: 30vw; height: 30vw; left: 40vw; top: 50vh; background: #B83A00; animation-delay: -14s; opacity: .45; }
+  .b1 { width: 55vw; height: 55vw; left: -15vw; top: -20vw; background: #6C5CE7; }
+  .b2 { width: 45vw; height: 45vw; right: -12vw; bottom: -18vw; background: #8E7CF0; animation-delay: -7s; }
+  .b3 { width: 30vw; height: 30vw; left: 40vw; top: 50vh; background: var(--accent-deep); animation-delay: -14s; opacity: .45; }
   @keyframes drift { to { transform: translate(6vw, 4vh) scale(1.15); } }
   .grain { position: absolute; inset: 0; background-image: radial-gradient(#ffffff10 1px, transparent 1px); background-size: 22px 22px; }
 
@@ -31,13 +32,13 @@
   .main { display: flex; flex-direction: column; min-width: 0; min-height: 0; }
   header { display: flex; align-items: center; justify-content: space-between; gap: 2vw; margin-bottom: 1.8vw; }
   .title { display: flex; align-items: center; gap: 1.2vw; }
-  .logo { width: 4.6vw; height: 4.6vw; min-width: 56px; min-height: 56px; border-radius: 1.3vw; background: radial-gradient(circle at 30% 25%, #FFFFFF, #FFE4CC 60%, #FFC58F); display: grid; place-items: center; box-shadow: 0 10px 30px -10px #FF6A00; overflow: hidden; }
+  .logo { width: 4.6vw; height: 4.6vw; min-width: 56px; min-height: 56px; border-radius: 1.3vw; background: radial-gradient(circle at 30% 25%, #FFFFFF, #E6E2FA 60%, #C9C0F5); display: grid; place-items: center; box-shadow: 0 10px 30px -10px #6C5CE7; overflow: hidden; }
   .logo svg { width: 84%; margin-top: 8%; }
   h1 { margin: 0; font-size: clamp(30px, 3.4vw, 72px); font-weight: 900; letter-spacing: .04em; line-height: 1; }
-  h1 span { color: var(--orange); }
+  h1 span { color: var(--accent); }
   .tag { margin: .4vw 0 0; color: var(--muted); font-size: clamp(14px, 1.25vw, 26px); font-weight: 600; }
   .counter { text-align: right; }
-  .counter b { display: block; font-size: clamp(34px, 3.6vw, 80px); font-weight: 900; color: var(--orange-2); line-height: 1; font-variant-numeric: tabular-nums; }
+  .counter b { display: block; font-size: clamp(34px, 3.6vw, 80px); font-weight: 900; color: var(--accent-2); line-height: 1; font-variant-numeric: tabular-nums; }
   .counter small { color: var(--muted); font-size: clamp(12px, 1vw, 20px); font-weight: 600; text-transform: uppercase; letter-spacing: .12em; }
 
   .wall { flex: 1; min-height: 0; display: grid; gap: 1.4vw; align-content: center; justify-content: center; }
@@ -56,7 +57,7 @@
 
   /* Lateral com QR Code */
   aside { display: flex; flex-direction: column; gap: 1.4vw; min-height: 0; }
-  .qr-card { background: linear-gradient(160deg, var(--orange-2), var(--orange-deep)); border-radius: 1.6vw; padding: 1.8vw; text-align: center; color: #fff; box-shadow: 0 2vw 4vw -2vw #FF5A00aa; position: relative; overflow: hidden; }
+  .qr-card { background: linear-gradient(160deg, var(--accent-2), var(--accent-deep)); border-radius: 1.6vw; padding: 1.8vw; text-align: center; color: #fff; box-shadow: 0 2vw 4vw -2vw #6C5CE7aa; position: relative; overflow: hidden; }
   .qr-card::after { content: ''; position: absolute; width: 60%; aspect-ratio: 1; border-radius: 50%; background: #ffffff1a; right: -20%; top: -20%; }
   .qr-card h2 { margin: 0 0 1.2vw; font-size: clamp(20px, 1.9vw, 40px); font-weight: 900; line-height: 1.1; position: relative; z-index: 1; }
   .qr-box { background: #fff; border-radius: 1.2vw; padding: 1.1vw; aspect-ratio: 1; display: grid; place-items: center; position: relative; z-index: 1; animation: pulse 2.8s ease-in-out infinite; }
@@ -65,19 +66,19 @@
   .url { margin-top: 1vw; font-size: clamp(11px, .85vw, 18px); font-weight: 600; opacity: .9; word-break: break-all; position: relative; z-index: 1; }
   .steps { list-style: none; margin: 0; padding: 0; display: grid; gap: .9vw; }
   .steps li { display: flex; align-items: center; gap: 1vw; background: #ffffff0d; border: 1px solid #ffffff17; border-radius: 1vw; padding: 1vw 1.1vw; font-size: clamp(14px, 1.15vw, 24px); font-weight: 600; }
-  .steps li span { flex: none; width: 2.3vw; height: 2.3vw; min-width: 30px; min-height: 30px; border-radius: 50%; display: grid; place-items: center; background: var(--orange); color: #fff; font-weight: 900; }
+  .steps li span { flex: none; width: 2.3vw; height: 2.3vw; min-width: 30px; min-height: 30px; border-radius: 50%; display: grid; place-items: center; background: var(--accent); color: #fff; font-weight: 900; }
 
   /* Destaque da nova foto */
   .spot { position: fixed; inset: 0; z-index: 10; display: grid; place-items: center; background: #0d0502d9; backdrop-filter: blur(8px); opacity: 0; pointer-events: none; transition: opacity .5s ease; }
   .spot.on { opacity: 1; }
   .spot-inner { display: flex; align-items: center; gap: 4vw; }
-  .spot img { height: 86vh; aspect-ratio: 2 / 3; border-radius: 1.4vw; box-shadow: 0 0 0 .5vw #fff, 0 3vw 8vw -2vw #FF6A00; transform: scale(.6) rotate(-6deg); opacity: 0; transition: transform .8s cubic-bezier(.2,1.4,.4,1), opacity .5s; }
+  .spot img { height: 86vh; aspect-ratio: 2 / 3; border-radius: 1.4vw; box-shadow: 0 0 0 .5vw #fff, 0 3vw 8vw -2vw #6C5CE7; transform: scale(.6) rotate(-6deg); opacity: 0; transition: transform .8s cubic-bezier(.2,1.4,.4,1), opacity .5s; }
   .spot.on img { transform: none; opacity: 1; }
   .spot-text { max-width: 34vw; transform: translateX(4vw); opacity: 0; transition: all .7s .25s ease; }
   .spot.on .spot-text { transform: none; opacity: 1; }
-  .spot-text small { display: inline-block; background: var(--orange); color: #fff; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; padding: .5vw 1.1vw; border-radius: 99px; font-size: clamp(12px, 1.1vw, 22px); }
+  .spot-text small { display: inline-block; background: var(--accent); color: #fff; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; padding: .5vw 1.1vw; border-radius: 99px; font-size: clamp(12px, 1.1vw, 22px); }
   .spot-text h3 { font-size: clamp(36px, 4.6vw, 100px); font-weight: 900; line-height: 1.02; margin: 1.2vw 0 .8vw; }
-  .spot-text h3 span { color: var(--orange-2); }
+  .spot-text h3 span { color: var(--accent-2); }
   .spot-text p { font-size: clamp(16px, 1.6vw, 34px); color: var(--muted); margin: 0; }
   .confetti { position: fixed; inset: 0; z-index: 11; pointer-events: none; }
 
@@ -98,8 +99,8 @@
       <div class="title">
         <div class="logo" id="logo"></div>
         <div>
-          <h1>ORQUESTRA <span>AI</span></h1>
-          <p class="tag"><span class="live" id="live"><i></i> Mural de quem passou pelo nosso stand</span></p>
+          <h1 data-cfg="nome">Mural de Fotos</h1>
+          <p class="tag"><span class="live" id="live"><i></i> <span data-cfg="subtitulo"></span></span></p>
         </div>
       </div>
       <div class="counter"><b id="count">0</b><small>participantes</small></div>
@@ -115,7 +116,7 @@
     </div>
     <ol class="steps">
       <li><span>1</span> Aponte a câmera do celular para o QR Code</li>
-      <li><span>2</span> Tire uma selfie com a moldura laranja</li>
+      <li><span>2</span> Tire uma selfie com a moldura</li>
       <li><span>3</span> Envie e veja sua foto no telão!</li>
     </ol>
   </aside>
@@ -127,7 +128,7 @@
     <div class="spot-text">
       <small>Nova foto no mural</small>
       <h3 id="spotName"></h3>
-      <p>Obrigado por participar da Orquestra AI 🧡</p>
+      <p data-cfg="agradecimento"></p>
     </div>
   </div>
 </div>
@@ -139,7 +140,7 @@
 <script>
 (() => {
   const $ = (id) => document.getElementById(id);
-  const robot = window.OrqFrame.robotSVG();
+  const robot = window.PainelFrame.logoSVG();
   $('logo').innerHTML = robot;
 
   let photos = [];            // todas, mais nova primeiro
@@ -186,7 +187,7 @@
     wall.innerHTML = '';
     $('count').textContent = photos.length;
     if (!photos.length) {
-      wall.innerHTML = `<div class="empty"><div class="bot">${robot}</div><div class="big">Seja o primeiro a aparecer aqui!</div><p>Escaneie o QR Code ao lado e tire sua foto 🧡</p></div>`;
+      wall.innerHTML = `<div class="empty"><div class="bot">${robot}</div><div class="big">Seja o primeiro a aparecer aqui!</div><p>Escaneie o QR Code ao lado e tire sua foto 📸</p></div>`;
       shown = [];
       return;
     }
@@ -245,12 +246,12 @@
   }
   const escapeHtml = (s) => s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
-  // Confete laranja
+  // Confete nas cores do tema
   const cv = $('confetti'), cx = cv.getContext('2d');
   let parts = [], raf = null;
   function burst() {
     cv.width = innerWidth; cv.height = innerHeight;
-    const colors = ['#FF7A00', '#FF9A2E', '#FFD27A', '#FFFFFF', '#E85000'];
+    const K = window.PAINEL.cores; const colors = [K.destaque, K.destaqueClaro, '#FFD27A', '#FFFFFF', K.destaqueEscuro];
     for (let i = 0; i < 220; i++) {
       parts.push({
         x: innerWidth / 2 + (Math.random() - .5) * innerWidth * .3, y: innerHeight * .55,
@@ -279,7 +280,7 @@
     ]);
     $('url').textContent = info.captureUrl.replace(/^https?:\/\//, '');
     $('qr').innerHTML = '';
-    new QRCode($('qr'), { text: info.captureUrl, width: 512, height: 512, colorDark: '#2B1408', colorLight: '#FFFFFF', correctLevel: QRCode.CorrectLevel.M });
+    new QRCode($('qr'), { text: info.captureUrl, width: 512, height: 512, colorDark: '#1E1B2E', colorLight: '#FFFFFF', correctLevel: QRCode.CorrectLevel.M });
     photos = list.slice().reverse();
     render();
   }

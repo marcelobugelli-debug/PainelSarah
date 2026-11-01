@@ -1,6 +1,10 @@
-# Mural Orquestra AI
+# PainelSarah — Mural de fotos
 
-Mural de fotos interativo para o stand: o telão mostra as fotos e um QR Code; o visitante escaneia, tira uma selfie com a moldura laranja da Orquestra AI e a foto aparece no telão na hora.
+Mural de fotos interativo: o telão mostra as fotos e um QR Code; o convidado escaneia, tira uma selfie com a moldura e a foto aparece no telão na hora.
+
+## Personalizar (nome, textos e cores)
+
+Tudo fica em `public/config.js`. Edite esse arquivo para trocar o tema; não precisa mexer nos outros.
 
 ## Como rodar
 
@@ -20,7 +24,7 @@ As fotos ficam salvas em `data/photos/`.
 Celulares só liberam a câmera ao vivo (prévia com a moldura e contagem 3-2-1) em sites HTTPS.
 Sem HTTPS a página continua funcionando: ela abre a câmera do próprio celular e aplica a moldura depois.
 
-Para ter HTTPS (e funcionar também no 4G dos visitantes, fora do Wi-Fi do stand), use um túnel, por exemplo:
+Para ter HTTPS (e funcionar também no 4G dos visitantes, fora do Wi-Fi do local), use um túnel, por exemplo:
 
 ```bash
 cloudflared tunnel --url http://localhost:3000
@@ -39,18 +43,19 @@ Para testar localmente: `ADMIN_KEY=minhasenha node server.js`.
 
 ## Publicado na DigitalOcean
 
-- Telão: https://SEU-IP.sslip.io/telao
-- Celular (QR Code): https://SEU-IP.sslip.io/foto
-- Moderação: https://SEU-IP.sslip.io/admin
+- Telão: https://178-128-75-74.sslip.io/telao
+- Celular (QR Code): https://178-128-75-74.sslip.io/foto
+- Moderação: https://178-128-75-74.sslip.io/admin
 
-O endereço `sslip.io` aponta para o IP da droplet e permite HTTPS grátis (certificado automático do Caddy).
+Na droplet (`servidor-marcelo`):
 
-Na droplet:
-- Site em `/opt/orquestra-mural` (fotos em `/opt/orquestra-mural/data`), serviço `orquestra-mural` (systemd).
-- Configuração e senha de moderação em `/etc/orquestra-mural.env`. Para ver a senha:
-  `ssh root@SEU_IP "grep ADMIN_KEY /etc/orquestra-mural.env"`
-  Para trocar: edite o arquivo e rode `systemctl restart orquestra-mural`.
+- Código em `/opt/painelsarah` (fotos em `/opt/painelsarah/data`), serviço `painelsarah` (systemd).
+- Configuração e senha de moderação em `/etc/painelsarah.env` (ver: `grep ADMIN_KEY /etc/painelsarah.env`).
 - HTTPS pelo Caddy em `/etc/caddy/Caddyfile`.
-- Logs: `journalctl -u orquestra-mural -f`
+- Logs: `journalctl -u painelsarah -f`
 
-Para publicar alterações feitas aqui: `SERVER=root@SEU_IP ./deploy.sh`
+Para publicar alterações enviadas ao GitHub, no Web Console da droplet:
+
+```
+cd /opt/painelsarah && sudo -u mural git pull && systemctl restart painelsarah
+```

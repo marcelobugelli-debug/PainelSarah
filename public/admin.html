@@ -4,58 +4,59 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
-<meta name="theme-color" content="#FF7A00">
-<title>Orquestra AI · Moderação</title>
+<meta name="theme-color" content="#6C5CE7">
+<title>Mural · Moderação</title>
+<script src="/config.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
 <style>
-  :root { --orange: #FF7A00; --orange-2: #FF9A2E; --orange-deep: #E85000; --ink: #2B1408; --cream: #FFF6EC; --muted: #8A6A55; --line: #FFD9B8; --danger: #D93A12; }
+  :root { --accent: #6C5CE7; --accent-2: #8E7CF0; --accent-deep: #4B3BC4; --ink: #1E1B2E; --cream: #F6F5FB; --muted: #6E6A85; --line: #DCD8F2; --danger: #D93A12; }
   * { box-sizing: border-box; }
   body { margin: 0; font-family: 'Outfit', system-ui, sans-serif; color: var(--ink); background: var(--cream); min-height: 100vh; }
   .btn { appearance: none; border: 0; font: inherit; font-weight: 800; text-decoration: none; cursor: pointer; border-radius: 999px; padding: 12px 20px; display: inline-flex; align-items: center; gap: 8px; transition: transform .1s, opacity .2s; }
   .btn:active { transform: scale(.97); }
-  .btn-primary { color: #fff; background: linear-gradient(135deg, var(--orange-2), var(--orange-deep)); box-shadow: 0 10px 22px -10px #FF6A00cc; }
+  .btn-primary { color: #fff; background: linear-gradient(135deg, var(--accent-2), var(--accent-deep)); box-shadow: 0 10px 22px -10px #6C5CE7cc; }
   .btn-ghost { background: #fff; border: 2px solid var(--line); color: var(--ink); }
   .btn-danger { background: var(--danger); color: #fff; }
   .btn[disabled] { opacity: .55; pointer-events: none; }
 
   /* Login */
   #login { min-height: 100vh; display: grid; place-items: center; padding: 16px; }
-  .login-card { width: 100%; max-width: 380px; background: #fff; border-radius: 24px; padding: 32px 26px; box-shadow: 0 24px 60px -24px #A8400066; text-align: center; }
-  .login-card .bot { width: 92px; height: 92px; margin: 0 auto 14px; border-radius: 50%; background: linear-gradient(135deg, var(--orange-2), var(--orange-deep)); display: grid; place-items: center; }
+  .login-card { width: 100%; max-width: 380px; background: #fff; border-radius: 24px; padding: 32px 26px; box-shadow: 0 24px 60px -24px #3B2F8F66; text-align: center; }
+  .login-card .bot { width: 92px; height: 92px; margin: 0 auto 14px; border-radius: 50%; background: linear-gradient(135deg, var(--accent-2), var(--accent-deep)); display: grid; place-items: center; }
   .login-card .bot svg { width: 64px; }
   .login-card h1 { margin: 0 0 4px; font-size: 26px; font-weight: 900; }
   .login-card p { margin: 0 0 20px; color: var(--muted); }
   input[type=password] { width: 100%; padding: 14px 16px; font: inherit; font-size: 17px; border: 2px solid var(--line); border-radius: 14px; outline: none; margin-bottom: 14px; }
-  input[type=password]:focus { border-color: var(--orange); box-shadow: 0 0 0 4px #FF7A0026; }
+  input[type=password]:focus { border-color: var(--accent); box-shadow: 0 0 0 4px #6C5CE726; }
   .login-card .btn { width: 100%; justify-content: center; font-size: 17px; padding: 15px; }
   .err { color: var(--danger); font-weight: 600; min-height: 22px; margin-top: 10px; font-size: 15px; }
 
   /* Painel */
   #panel { display: none; }
-  header { position: sticky; top: 0; z-index: 5; background: #FFF6ECee; backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); }
+  header { position: sticky; top: 0; z-index: 5; background: #F6F5FBee; backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); }
   .bar { max-width: 1280px; margin: 0 auto; padding: 14px 16px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
   .brand { display: flex; align-items: center; gap: 10px; font-weight: 900; font-size: 20px; margin-right: auto; }
-  .brand .logo { width: 40px; height: 40px; border-radius: 12px; background: linear-gradient(135deg, var(--orange-2), var(--orange-deep)); display: grid; place-items: center; }
+  .brand .logo { width: 40px; height: 40px; border-radius: 12px; background: linear-gradient(135deg, var(--accent-2), var(--accent-deep)); display: grid; place-items: center; }
   .brand .logo svg { width: 30px; }
   .brand small { display: block; font-size: 13px; font-weight: 600; color: var(--muted); }
   .stat { background: #fff; border: 2px solid var(--line); border-radius: 999px; padding: 8px 14px; font-weight: 800; }
-  .stat b { color: var(--orange-deep); }
+  .stat b { color: var(--accent-deep); }
   .live { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); font-weight: 600; }
   .live i { width: 9px; height: 9px; border-radius: 50%; background: #2BC46A; }
   .live.off i { background: #aaa; }
 
   main { max-width: 1280px; margin: 0 auto; padding: 20px 16px 60px; }
   .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 18px; }
-  .item { background: #fff; border-radius: 18px; overflow: hidden; box-shadow: 0 10px 26px -16px #A8400088; display: flex; flex-direction: column; animation: in .35s ease both; }
+  .item { background: #fff; border-radius: 18px; overflow: hidden; box-shadow: 0 10px 26px -16px #3B2F8F88; display: flex; flex-direction: column; animation: in .35s ease both; }
   @keyframes in { from { opacity: 0; transform: translateY(8px); } }
-  .item.fresh { box-shadow: 0 0 0 3px var(--orange), 0 10px 26px -16px #A8400088; }
-  .item img { width: 100%; aspect-ratio: 2 / 3; object-fit: cover; display: block; cursor: zoom-in; background: #f3e6da; }
+  .item.fresh { box-shadow: 0 0 0 3px var(--accent), 0 10px 26px -16px #3B2F8F88; }
+  .item img { width: 100%; aspect-ratio: 2 / 3; object-fit: cover; display: block; cursor: zoom-in; background: #ECEAF5; }
   .meta { padding: 10px 12px 12px; display: flex; align-items: center; gap: 8px; }
   .meta div { min-width: 0; flex: 1; }
   .meta strong { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .meta span { font-size: 13px; color: var(--muted); }
-  .del { width: 40px; height: 40px; flex: none; border-radius: 12px; border: 0; background: #FFE9E1; color: var(--danger); cursor: pointer; display: grid; place-items: center; }
+  .del { width: 40px; height: 40px; flex: none; border-radius: 12px; border: 0; background: #FDE8E8; color: var(--danger); cursor: pointer; display: grid; place-items: center; }
   .del:hover { background: var(--danger); color: #fff; }
   .del svg { width: 20px; height: 20px; }
   .empty { text-align: center; color: var(--muted); padding: 60px 16px; font-size: 18px; }
@@ -79,7 +80,7 @@
   <form class="login-card" id="loginForm">
     <div class="bot" id="bot1"></div>
     <h1>Moderação</h1>
-    <p>Área restrita da equipe Orquestra AI</p>
+    <p>Área restrita da organização</p>
     <input type="password" id="key" placeholder="Senha de moderação" autocomplete="current-password" required>
     <button class="btn btn-primary" type="submit" id="enter">Entrar</button>
     <div class="err" id="loginErr"></div>
@@ -89,7 +90,7 @@
 <section id="panel">
   <header>
     <div class="bar">
-      <div class="brand"><div class="logo" id="bot2"></div><div>ORQUESTRA AI<small>Moderação do mural</small></div></div>
+      <div class="brand"><div class="logo" id="bot2"></div><div><span data-cfg="nome">Mural de Fotos</span><small>Moderação do mural</small></div></div>
       <span class="live" id="live"><i></i> ao vivo</span>
       <span class="stat"><b id="count">0</b> fotos</span>
       <a class="btn btn-ghost" href="/telao" target="_blank">Ver telão</a>
@@ -116,11 +117,11 @@
 <script>
 (() => {
   const $ = (id) => document.getElementById(id);
-  const robot = window.OrqFrame.robotSVG();
+  const robot = window.PainelFrame.logoSVG();
   $('bot1').innerHTML = robot; $('bot2').innerHTML = robot;
 
   let key = '';
-  try { key = sessionStorage.getItem('orq-admin') || ''; } catch {}
+  try { key = sessionStorage.getItem('mural-admin') || ''; } catch {}
   let photos = [], pending = null, es = null;
 
   const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -142,7 +143,7 @@
       const k = $('key').value;
       await login(k);
       key = k;
-      try { sessionStorage.setItem('orq-admin', k); } catch {}
+      try { sessionStorage.setItem('mural-admin', k); } catch {}
       openPanel();
     } catch (err) { $('loginErr').textContent = err.message; }
     finally { $('enter').disabled = false; }
@@ -150,7 +151,7 @@
 
   $('logout').onclick = () => {
     key = '';
-    try { sessionStorage.removeItem('orq-admin'); } catch {}
+    try { sessionStorage.removeItem('mural-admin'); } catch {}
     if (es) es.close();
     location.reload();
   };
@@ -227,7 +228,7 @@
     });
   }
 
-  if (key) login(key).then(openPanel).catch(() => { try { sessionStorage.removeItem('orq-admin'); } catch {} key = ''; });
+  if (key) login(key).then(openPanel).catch(() => { try { sessionStorage.removeItem('mural-admin'); } catch {} key = ''; });
 })();
 </script>
 </body>
