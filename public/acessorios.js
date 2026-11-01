@@ -2,7 +2,7 @@
 // O reconhecimento de rosto roda no próprio celular e só é carregado se alguém escolher um acessório.
 (function () {
   const VISION = 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14';
-  const MODEL = 'https://storage.googleapis.com/mediapipe-models/face_detector/blazeface_short_range/float16/1/blazeface_short_range.tflite';
+  const MODEL = 'https://storage.googleapis.com/mediapipe-models/face_detector/blaze_face_short_range/float16/latest/blaze_face_short_range.tflite';
 
   const LISTA = [
     { id: 'nenhum', emoji: '🚫', nome: 'Nenhum' },
