@@ -88,7 +88,6 @@
 
           <linearGradient id="seamP" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2A1050" stop-opacity="0"/><stop offset="1" stop-color="#2A1050" stop-opacity="1"/></linearGradient>
           <rect x="0" y="960" width="${W}" height="162" fill="url(#seamP)"/>
-          <rect x="0" y="0" width="${W}" height="380" fill="url(#topP)"/>
 `);
       },
       top(name, date) {
@@ -96,11 +95,6 @@
         const tw = Math.min(900, g.length * 46 * 0.5 + 120);
         return svg(`
           <linearGradient id="botP" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${INK}" stop-opacity="0"/><stop offset="1" stop-color="${INK}" stop-opacity=".9"/></linearGradient>`, `
-          ${big(STAR.toUpperCase(), 56, 222, fit(STAR, 620, 226, 0.47), 640, 'fill="#FFFFFF"')}
-          <g transform="translate(900 132) rotate(6)"><rect x="-92" y="-92" width="184" height="184" rx="20" fill="${PINK}"/>
-            <text x="0" y="40" text-anchor="middle" font-family="${DISP}" font-size="126" fill="#FFFFFF">${esc(AGE)}</text>
-            <text x="0" y="76" text-anchor="middle" font-family="${SANS}" font-weight="800" font-size="21" letter-spacing="8" fill="#FFFFFF">ANOS</text></g>
-          <text x="60" y="272" font-family="${SANS}" font-weight="800" font-size="24" letter-spacing="9" fill="${LILAC}">${esc(TAG)}</text>
           <g transform="translate(${W / 2} 1010) rotate(-3)" filter="url(#soft)">
             <rect x="${-tw / 2}" y="-38" width="${tw}" height="76" fill="${PINK}"/>
             ${big(g, 0, 22, 46, tw - 70, 'fill="#FFFFFF"', 'middle')}
