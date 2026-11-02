@@ -103,27 +103,11 @@
   const FRAMES = [
     // ================================================== REALIDADE AUMENTADA (sem textos)
     {
-      id: 'ar-palco', nome: 'No palco', badge: '✨ realidade aumentada', ar: true,
-      dica: 'Você no palco! Afaste um pouco o celular para aparecer mais.',
-      hole: { x: 0, y: 0, w: W, h: H },
-      bg: () => stageSVG(11),
-    },
-    {
       id: 'ar-sarah', nome: `Ao lado da ${STAR}`, badge: '✨ realidade aumentada', ar: true,
       dica: `Fique do lado direito da tela para posar com a ${STAR}.`,
       hole: { x: 0, y: 0, w: W, h: H },
       bg: () => stageSVG(23),
       front: [{ key: 'sarahCut', x: -10, y: 520, w: 470, h: 1080, fit: 'contain', align: 'bottom' }],
-    },
-    {
-      id: 'ar-popstars', nome: 'Com as Pop Stars', badge: '✨ realidade aumentada', ar: true,
-      dica: 'Fique no meio da tela: as Pop Stars aparecem dos dois lados.',
-      hole: { x: 0, y: 0, w: W, h: H },
-      bg: () => stageSVG(37),
-      behind: [
-        { key: 'grupoCut', x: 330, y: 800, w: 790, h: 780, fit: 'contain', align: 'bottom', halign: 'right', cx0: 0.5, cx1: 1 },
-        { key: 'grupoCut', x: -40, y: 800, w: 790, h: 780, fit: 'contain', align: 'bottom', halign: 'left', cx0: 0, cx1: 0.5 },
-      ],
     },
     // ================================================== BÁSICA (grupos)
     {
