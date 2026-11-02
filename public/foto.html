@@ -483,7 +483,14 @@
     if (!liveCameraOk()) { prepareFrame().catch(() => {}); return nativeCamera(); }
     // Pede a câmera imediatamente e monta a moldura em paralelo
     const cam = startCamera();
-    try { await prepareFrame(); } catch { stopCamera(); return showErr($('err0'), 'Não foi possível carregar a moldura. Recarregue a página.'); }
+    try { await prepareFrame(); }
+    catch (e) {
+      // tenta montar de novo uma vez antes de desistir
+      frameKey = ''; try { await prepareFrame(); } catch (e2) {
+        stopCamera(); console.warn('moldura', e2);
+        return showErr($('err0'), `Essa moldura não carregou neste celular (${(e2 && e2.message) || 'erro'}). Tente outra moldura ou recarregue a página.`);
+      }
+    }
     try { await cam; renderChips(); show('camera'); }
     catch (e) {
       console.warn('Câmera ao vivo indisponível', e);

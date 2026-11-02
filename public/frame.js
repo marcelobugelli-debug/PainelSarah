@@ -74,29 +74,40 @@
     // ---------------------------------------------------------------- POP STARS
     {
       id: 'popstars', nome: 'Pop Stars',
-      hole: { x: 0, y: 0, w: W, h: H },
-      layers: [{ key: 'faixa', x: 0, y: 1030, w: W, h: 590, align: 'top', fadeTop: 200 }],
+      hole: { x: 0, y: 0, w: W, h: 880 },
+      // grupo inteiro (sem cortar ninguém), esfumado no topo e nas laterais
+      layers: [{ key: 'faixa', x: 120, y: 790, w: 840, h: 830, fit: 'contain', align: 'bottom', fadeTop: 150, fadeSides: 90 }],
       draw() {
+        const hp = rr(0, 0, W, 880, 0);
         return svg(`
-          <linearGradient id="topP" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${INK}" stop-opacity=".88"/><stop offset="1" stop-color="${INK}" stop-opacity="0"/></linearGradient>`, `
-          <rect x="0" y="0" width="${W}" height="400" fill="url(#topP)"/>`);
+          <radialGradient id="stP" cx=".5" cy=".7" r=".75"><stop offset="0" stop-color="#5B2C9E"/><stop offset=".6" stop-color="#2A1050"/><stop offset="1" stop-color="${INK}"/></radialGradient>
+          <linearGradient id="topP" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${INK}" stop-opacity=".85"/><stop offset="1" stop-color="${INK}" stop-opacity="0"/></linearGradient>
+          <linearGradient id="beamL" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${PINK}" stop-opacity=".55"/><stop offset="1" stop-color="${PINK}" stop-opacity="0"/></linearGradient>
+          <linearGradient id="beamR" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${LILAC}" stop-opacity=".5"/><stop offset="1" stop-color="${LILAC}" stop-opacity="0"/></linearGradient>`, `
+          ${paper('url(#stP)', hp)}
+          <polygon points="0,820 60,820 300,1620 0,1620" fill="url(#beamL)"/>
+          <polygon points="1020,820 1080,820 1080,1620 780,1620" fill="url(#beamR)"/>
+          <linearGradient id="seamP" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2A1050" stop-opacity="0"/><stop offset="1" stop-color="#2A1050" stop-opacity="1"/></linearGradient>
+          <rect x="0" y="700" width="${W}" height="182" fill="url(#seamP)"/>
+          <rect x="0" y="0" width="${W}" height="380" fill="url(#topP)"/>
+          ${spark(70, 1000, 18, '#FFFFFF', .9)}${spark(1010, 1080, 22, '#FFFFFF', .9)}${spark(40, 1300, 10, LILAC)}${spark(1040, 1400, 12, PINK)}`);
       },
       top(name, date) {
         const g = shortName(name).toUpperCase() || 'CONVIDADO VIP';
         const tw = Math.min(900, g.length * 46 * 0.5 + 120);
         return svg(`
-          <linearGradient id="botP" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${INK}" stop-opacity="0"/><stop offset="1" stop-color="${INK}" stop-opacity=".85"/></linearGradient>`, `
+          <linearGradient id="botP" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${INK}" stop-opacity="0"/><stop offset="1" stop-color="${INK}" stop-opacity=".9"/></linearGradient>`, `
           ${big(STAR.toUpperCase(), 56, 222, fit(STAR, 620, 226, 0.47), 640, 'fill="#FFFFFF"')}
           <g transform="translate(900 132) rotate(6)"><rect x="-92" y="-92" width="184" height="184" rx="20" fill="${PINK}"/>
             <text x="0" y="40" text-anchor="middle" font-family="${DISP}" font-size="126" fill="#FFFFFF">${esc(AGE)}</text>
             <text x="0" y="76" text-anchor="middle" font-family="${SANS}" font-weight="800" font-size="21" letter-spacing="8" fill="#FFFFFF">ANOS</text></g>
           <text x="60" y="272" font-family="${SANS}" font-weight="800" font-size="24" letter-spacing="9" fill="${LILAC}">${esc(TAG)}</text>
-          <g transform="translate(${W / 2} 1010) rotate(-3)" filter="url(#soft)">
+          <g transform="translate(${W / 2} 850) rotate(-3)" filter="url(#soft)">
             <rect x="${-tw / 2}" y="-38" width="${tw}" height="76" fill="${PINK}"/>
             ${big(g, 0, 22, 46, tw - 70, 'fill="#FFFFFF"', 'middle')}
           </g>
-          <rect x="0" y="1520" width="${W}" height="100" fill="url(#botP)"/>
-          <text x="${W / 2}" y="1592" text-anchor="middle" font-family="${SANS}" font-weight="800" font-size="20" letter-spacing="10" fill="#FFFFFF">NA FESTA COM AS POP STARS${date ? ` · ${esc(date)}` : ''}</text>`);
+          <rect x="0" y="1530" width="${W}" height="90" fill="url(#botP)"/>
+          <text x="${W / 2}" y="1596" text-anchor="middle" font-family="${SANS}" font-weight="800" font-size="20" letter-spacing="10" fill="#FFFFFF">NA FESTA COM AS POP STARS${date ? ` · ${esc(date)}` : ''}</text>`);
       },
     },
     // ---------------------------------------------------------------- COM A SARAH
@@ -162,7 +173,8 @@
           <linearGradient id="bgB" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${PURPLE}"/><stop offset="1" stop-color="${INK}"/></linearGradient>
           <clipPath id="stripB"><path d="${card}"/></clipPath>`, `
           <rect width="${W}" height="${H}" fill="url(#bgB)"/>
-          <path fill-rule="evenodd" fill="#FFFFFF" d="${card} ${hp}" filter="url(#soft)"/>
+          <path d="${rr(48, 56, 1000, 1540, 44)}" fill="#000000" opacity=".35"/>
+          <path fill-rule="evenodd" fill="#FFFFFF" d="${card} ${hp}"/>
           <path fill-rule="evenodd" fill="url(#bgB)" d="M0 0 H${W} V${H} H0 Z ${card}"/>
           <g clip-path="url(#stripB)"><rect x="40" y="40" width="148" height="1540" fill="${PINK}"/></g>
           <rect x="${W / 2 - 70}" y="70" width="140" height="26" rx="13" fill="${INK}" opacity=".85"/>
@@ -209,19 +221,31 @@
   ];
 
   const byId = (id) => FRAMES.find((f) => f.id === id) || FRAMES[0];
-  const svgImage = (str) => new Promise((res, rej) => { const im = new Image(); im.onload = () => res(im); im.onerror = rej; im.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(str); });
+  const loadSvg = (str) => new Promise((res, rej) => { const im = new Image(); im.onload = () => res(im); im.onerror = () => rej(new Error('svg')); im.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(str); });
+  async function svgImage(str) {
+    try { return await loadSvg(str); } catch {}
+    const noFilter = str.replace(/ filter="url\(#[^)]+\)"/g, '');
+    try { return await loadSvg(noFilter); } catch {}
+    return loadSvg(noFilter.replace(/<style>[\s\S]*?<\/style>/, ''));
+  }
 
   // Desenha uma arte (cobrindo o retângulo), com topo esfumado e rotação opcionais
   function drawLayer(ctx, L) {
     const oc = document.createElement('canvas'); oc.width = L.w; oc.height = L.h;
     const o = oc.getContext('2d'), im = IMG[L.key];
     if (im) {
-      const sc = Math.max(L.w / im.naturalWidth, L.h / im.naturalHeight), dw = im.naturalWidth * sc, dh = im.naturalHeight * sc;
-      o.drawImage(im, (L.w - dw) / 2, L.align === 'top' ? 0 : (L.h - dh) / 2, dw, dh);
+      const sc = (L.fit === 'contain' ? Math.min : Math.max)(L.w / im.naturalWidth, L.h / im.naturalHeight), dw = im.naturalWidth * sc, dh = im.naturalHeight * sc;
+      o.drawImage(im, (L.w - dw) / 2, L.align === 'top' ? 0 : L.align === 'bottom' ? L.h - dh : (L.h - dh) / 2, dw, dh);
     } else { o.fillStyle = PURPLE; o.fillRect(0, 0, L.w, L.h); }
     if (L.fadeTop) {
       o.globalCompositeOperation = 'destination-in';
       const g = o.createLinearGradient(0, 0, 0, L.h); g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(Math.min(1, L.fadeTop / L.h), 'rgba(0,0,0,1)'); g.addColorStop(1, 'rgba(0,0,0,1)');
+      o.fillStyle = g; o.fillRect(0, 0, L.w, L.h);
+    }
+    if (L.fadeSides) {
+      o.globalCompositeOperation = 'destination-in';
+      const f = Math.min(0.49, L.fadeSides / L.w);
+      const g = o.createLinearGradient(0, 0, L.w, 0); g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(f, 'rgba(0,0,0,1)'); g.addColorStop(1 - f, 'rgba(0,0,0,1)'); g.addColorStop(1, 'rgba(0,0,0,0)');
       o.fillStyle = g; o.fillRect(0, 0, L.w, L.h);
     }
     ctx.save();
