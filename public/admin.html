@@ -4,31 +4,31 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
-<meta name="theme-color" content="#6C5CE7">
+<meta name="theme-color" content="var(--accent)">
 <title>Mural · Moderação</title>
 <script src="/config.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
 <style>
-  :root { --accent: #6C5CE7; --accent-2: #8E7CF0; --accent-deep: #4B3BC4; --ink: #1E1B2E; --cream: #F6F5FB; --muted: #6E6A85; --line: #DCD8F2; --danger: #D93A12; }
+  :root { --accent: #FF3FA4; --accent-2: #FF8AD0; --accent-deep: #7B2CBF; --ink: #1E1B2E; --cream: var(--tint-0); --muted: #6E6A85; --line: var(--tint-2); --danger: #D93A12; }
   * { box-sizing: border-box; }
   body { margin: 0; font-family: 'Outfit', system-ui, sans-serif; color: var(--ink); background: var(--cream); min-height: 100vh; }
   .btn { appearance: none; border: 0; font: inherit; font-weight: 800; text-decoration: none; cursor: pointer; border-radius: 999px; padding: 12px 20px; display: inline-flex; align-items: center; gap: 8px; transition: transform .1s, opacity .2s; }
   .btn:active { transform: scale(.97); }
-  .btn-primary { color: #fff; background: linear-gradient(135deg, var(--accent-2), var(--accent-deep)); box-shadow: 0 10px 22px -10px #6C5CE7cc; }
+  .btn-primary { color: #fff; background: linear-gradient(135deg, var(--accent-2), var(--accent-deep)); box-shadow: 0 10px 22px -10px color-mix(in srgb, var(--accent) 80%, transparent); }
   .btn-ghost { background: #fff; border: 2px solid var(--line); color: var(--ink); }
   .btn-danger { background: var(--danger); color: #fff; }
   .btn[disabled] { opacity: .55; pointer-events: none; }
 
   /* Login */
   #login { min-height: 100vh; display: grid; place-items: center; padding: 16px; }
-  .login-card { width: 100%; max-width: 380px; background: #fff; border-radius: 24px; padding: 32px 26px; box-shadow: 0 24px 60px -24px #3B2F8F66; text-align: center; }
+  .login-card { width: 100%; max-width: 380px; background: #fff; border-radius: 24px; padding: 32px 26px; box-shadow: 0 24px 60px -24px color-mix(in srgb, var(--accent-deep) 40%, transparent); text-align: center; }
   .login-card .bot { width: 92px; height: 92px; margin: 0 auto 14px; border-radius: 50%; background: linear-gradient(135deg, var(--accent-2), var(--accent-deep)); display: grid; place-items: center; }
   .login-card .bot svg { width: 64px; }
   .login-card h1 { margin: 0 0 4px; font-size: 26px; font-weight: 900; }
   .login-card p { margin: 0 0 20px; color: var(--muted); }
   input[type=password] { width: 100%; padding: 14px 16px; font: inherit; font-size: 17px; border: 2px solid var(--line); border-radius: 14px; outline: none; margin-bottom: 14px; }
-  input[type=password]:focus { border-color: var(--accent); box-shadow: 0 0 0 4px #6C5CE726; }
+  input[type=password]:focus { border-color: var(--accent); box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 15%, transparent); }
   .login-card .btn { width: 100%; justify-content: center; font-size: 17px; padding: 15px; }
   .err { color: var(--danger); font-weight: 600; min-height: 22px; margin-top: 10px; font-size: 15px; }
 
@@ -48,15 +48,15 @@
 
   main { max-width: 1280px; margin: 0 auto; padding: 20px 16px 60px; }
   .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 18px; }
-  .item { background: #fff; border-radius: 18px; overflow: hidden; box-shadow: 0 10px 26px -16px #3B2F8F88; display: flex; flex-direction: column; animation: in .35s ease both; }
+  .item { background: #fff; border-radius: 18px; overflow: hidden; box-shadow: 0 10px 26px -16px color-mix(in srgb, var(--accent-deep) 53%, transparent); display: flex; flex-direction: column; animation: in .35s ease both; }
   @keyframes in { from { opacity: 0; transform: translateY(8px); } }
-  .item.fresh { box-shadow: 0 0 0 3px var(--accent), 0 10px 26px -16px #3B2F8F88; }
-  .item img { width: 100%; aspect-ratio: 2 / 3; object-fit: cover; display: block; cursor: zoom-in; background: #ECEAF5; }
+  .item.fresh { box-shadow: 0 0 0 3px var(--accent), 0 10px 26px -16px color-mix(in srgb, var(--accent-deep) 53%, transparent); }
+  .item img { width: 100%; aspect-ratio: 2 / 3; object-fit: cover; display: block; cursor: zoom-in; background: var(--tint-1); }
   .meta { padding: 10px 12px 12px; display: flex; align-items: center; gap: 8px; }
   .meta div { min-width: 0; flex: 1; }
   .meta strong { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .meta span { font-size: 13px; color: var(--muted); }
-  .item .note { margin: 0 12px; padding: 8px 10px; background: #F6F5FB; border-radius: 10px; font-size: 14px; font-style: italic; color: var(--ink); overflow-wrap: anywhere; }
+  .item .note { margin: 0 12px; padding: 8px 10px; background: var(--tint-0); border-radius: 10px; font-size: 14px; font-style: italic; color: var(--ink); overflow-wrap: anywhere; }
   .tools { max-width: 1280px; margin: 0 auto; padding: 16px 16px 0; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
   .tools p { margin: 0 auto 0 0; color: var(--muted); font-size: 14px; }
   .sheet .confirm-input { width: 100%; padding: 12px 14px; font: inherit; font-size: 16px; border: 2px solid var(--line); border-radius: 12px; margin-bottom: 14px; text-align: center; }
@@ -66,7 +66,7 @@
   .empty { text-align: center; color: var(--muted); padding: 60px 16px; font-size: 18px; }
 
   /* Modal */
-  .modal { position: fixed; inset: 0; z-index: 20; background: #1a0b04cc; display: none; place-items: center; padding: 16px; }
+  .modal { position: fixed; inset: 0; z-index: 20; background: #000000b3; display: none; place-items: center; padding: 16px; }
   .modal.on { display: grid; }
   .sheet { background: #fff; border-radius: 22px; max-width: 420px; width: 100%; padding: 18px; text-align: center; }
   .sheet img { width: 100%; max-height: 60vh; object-fit: contain; border-radius: 14px; }

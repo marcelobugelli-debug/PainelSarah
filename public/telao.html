@@ -9,8 +9,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
 <style>
   :root {
-    --accent: #6C5CE7; --accent-2: #8E7CF0; --accent-deep: #4B3BC4;
-    --bg: #0E0C1A; --ink: #1E1B2E; --text: #F3F2FA; --muted: #B9B5D0;
+    --accent: #FF3FA4; --accent-2: #FF8AD0; --accent-deep: #7B2CBF;
+    --bg: #14061F; --ink: #1E1B2E; --text: #F3F2FA; --muted: #B9B5D0;
     --side: clamp(260px, 22vw, 400px);
   }
   * { box-sizing: border-box; }
@@ -32,7 +32,7 @@
   .main { position: relative; display: flex; flex-direction: column; min-width: 0; min-height: 0; }
   header { display: flex; align-items: center; justify-content: space-between; gap: 2vw; margin-bottom: 1.8vw; }
   .title { display: flex; align-items: center; gap: 1.2vw; }
-  .logo { width: 4.6vw; height: 4.6vw; min-width: 56px; min-height: 56px; border-radius: 1.3vw; background: radial-gradient(circle at 30% 25%, #FFFFFF, #E6E2FA 60%, #C9C0F5); display: grid; place-items: center; box-shadow: 0 10px 30px -10px #6C5CE7; overflow: hidden; }
+  .logo { width: 4.6vw; height: 4.6vw; min-width: 56px; min-height: 56px; border-radius: 1.3vw; background: radial-gradient(circle at 30% 25%, #FFFFFF, var(--tint-1) 60%, var(--tint-3)); display: grid; place-items: center; box-shadow: 0 10px 30px -10px var(--accent); overflow: hidden; }
   .logo svg { width: 84%; }
   h1 { margin: 0; font-size: clamp(30px, 3.4vw, 72px); font-weight: 900; letter-spacing: .04em; line-height: 1; }
   h1 span { color: var(--accent); }
@@ -42,7 +42,7 @@
   .counter small { color: var(--muted); font-size: clamp(12px, 1vw, 20px); font-weight: 600; text-transform: uppercase; letter-spacing: .12em; }
 
   .wall { flex: 1; min-height: 0; display: grid; gap: 1.4vw; align-content: center; justify-content: center; }
-  .card { position: relative; aspect-ratio: 2 / 3; border-radius: .9vw; overflow: hidden; background: #2a1408; box-shadow: 0 1.2vw 2.4vw -1vw #000c; transform: rotate(var(--rot, 0deg)); transition: transform .5s ease; }
+  .card { position: relative; aspect-ratio: 2 / 3; border-radius: .9vw; overflow: hidden; background: color-mix(in srgb, var(--accent-deep) 35%, #000); box-shadow: 0 1.2vw 2.4vw -1vw #000c; transform: rotate(var(--rot, 0deg)); transition: transform .5s ease; }
   .card img { width: 100%; height: 100%; object-fit: cover; display: block; }
   .card .msg { position: absolute; left: 0; right: 0; bottom: 0; padding: 2.2em .7em .6em; font-size: clamp(10px, .85vw, 18px); font-weight: 600; line-height: 1.25; color: #fff; background: linear-gradient(transparent, #000c); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
   .card.enter { animation: cardIn .8s cubic-bezier(.2,1.3,.4,1) both; }
@@ -58,7 +58,7 @@
 
   /* Lateral com QR Code */
   aside { display: flex; flex-direction: column; gap: 1.4vw; min-height: 0; }
-  .qr-card { background: linear-gradient(160deg, var(--accent-2), var(--accent-deep)); border-radius: 1.6vw; padding: 1.8vw; text-align: center; color: #fff; box-shadow: 0 2vw 4vw -2vw #6C5CE7aa; position: relative; overflow: hidden; }
+  .qr-card { background: linear-gradient(160deg, var(--accent-2), var(--accent-deep)); border-radius: 1.6vw; padding: 1.8vw; text-align: center; color: #fff; box-shadow: 0 2vw 4vw -2vw color-mix(in srgb, var(--accent) 67%, transparent); position: relative; overflow: hidden; }
   .qr-card::after { content: ''; position: absolute; width: 60%; aspect-ratio: 1; border-radius: 50%; background: #ffffff1a; right: -20%; top: -20%; }
   .qr-card h2 { margin: 0 0 1.2vw; font-size: clamp(20px, 1.9vw, 40px); font-weight: 900; line-height: 1.1; position: relative; z-index: 1; }
   .qr-box { background: #fff; border-radius: 1.2vw; padding: 1.1vw; aspect-ratio: 1; display: grid; place-items: center; position: relative; z-index: 1; animation: pulse 2.8s ease-in-out infinite; }
@@ -70,10 +70,10 @@
   .steps li span { flex: none; width: 2.3vw; height: 2.3vw; min-width: 30px; min-height: 30px; border-radius: 50%; display: grid; place-items: center; background: var(--accent); color: #fff; font-weight: 900; }
 
   /* Destaque da nova foto */
-  .spot { position: fixed; inset: 0; z-index: 10; display: grid; place-items: center; background: #0d0502d9; backdrop-filter: blur(8px); opacity: 0; pointer-events: none; transition: opacity .5s ease; }
+  .spot { position: fixed; inset: 0; z-index: 10; display: grid; place-items: center; background: color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter: blur(8px); opacity: 0; pointer-events: none; transition: opacity .5s ease; }
   .spot.on { opacity: 1; }
   .spot-inner { display: flex; align-items: center; gap: 4vw; }
-  .spot img { height: 86vh; aspect-ratio: 2 / 3; border-radius: 1.4vw; box-shadow: 0 0 0 .5vw #fff, 0 3vw 8vw -2vw #6C5CE7; transform: scale(.6) rotate(-6deg); opacity: 0; transition: transform .8s cubic-bezier(.2,1.4,.4,1), opacity .5s; }
+  .spot img { height: 86vh; aspect-ratio: 2 / 3; border-radius: 1.4vw; box-shadow: 0 0 0 .5vw #fff, 0 3vw 8vw -2vw var(--accent); transform: scale(.6) rotate(-6deg); opacity: 0; transition: transform .8s cubic-bezier(.2,1.4,.4,1), opacity .5s; }
   .spot.on img { transform: none; opacity: 1; }
   .spot-text { max-width: 34vw; transform: translateX(4vw); opacity: 0; transition: all .7s .25s ease; }
   .spot.on .spot-text { transform: none; opacity: 1; }

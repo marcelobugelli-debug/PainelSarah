@@ -5,40 +5,44 @@
 // =====================================================================
 window.PAINEL = {
   // Nome principal (telão, celular, moldura, título das abas)
-  nome: 'Mural de Fotos',
+  nome: 'Festa da Sarah',
+
+  // Aniversariante e idade (aparecem em destaque nas molduras)
+  aniversariante: 'Sarah',
+  idade: 11,
 
   // Frase curta abaixo do nome no telão
-  subtitulo: 'Fotos ao vivo de quem está aqui',
+  subtitulo: 'Sarah faz 11 anos! 🎤✨',
 
   // Texto da tela inicial do celular
-  chamada: 'Faça uma selfie com a moldura e veja ela aparecer no telão na hora.',
+  chamada: 'Tire uma selfie de pop star e apareça no telão da festa!',
 
   // Mensagem que aparece no telão quando chega uma foto nova
-  agradecimento: 'Obrigado por participar! 💜',
+  agradecimento: 'Obrigado por vir celebrar com a Sarah! 💖',
 
   // Texto da tela final do celular, depois de enviar
-  enviado: 'Sua foto já está no mural. Obrigado por participar!',
+  enviado: 'Sua foto já está no telão da festa. Agora é só curtir! 💖',
 
-  // Linhas de texto da moldura (abaixo do nome). Deixe '' para esconder.
+  // Texto pequeno das molduras. Deixe '' para usar o padrão.
   moldura: {
-    linha1: '',
+    linha1: 'POP STAR PARTY',
     linha2: '',
   },
 
   // Cores: destaque (botões, QR Code, moldura) e fundos
   cores: {
-    destaque: '#6C5CE7',
-    destaqueClaro: '#8E7CF0',
-    destaqueEscuro: '#4B3BC4',
-    fundoTelao: '#0E0C1A',
+    destaque: '#FF3FA4',
+    destaqueClaro: '#FF8AD0',
+    destaqueEscuro: '#7B2CBF',
+    fundoTelao: '#14061F',
     texto: '#1E1B2E',
   },
 
   // Nome do arquivo quando o convidado salva a foto
-  arquivoFoto: 'minha-foto',
+  arquivoFoto: 'festa-da-sarah',
 
   // Figurinhas que o convidado pode colocar na foto
-  figurinhas: ['🎉', '🎂', '🥳', '💖', '⭐', '🌈', '🦄', '😂', '😎', '🔥', '👑', '🎈', '✨', '🐱', '🍕', '💜'],
+  figurinhas: ['🎤', '🎧', '💖', '✨', '⭐', '🎀', '💜', '🩷', '🎶', '💫', '👑', '😎', '🔥', '🦄', '🌈', '🎂', '🥳', '🐱'],
 
   // Vitrine no telão: depois de quantos segundos sem foto nova começa a passar as antigas,
   // e quanto tempo cada uma fica. Use 0 em carrosselEsperaSegundos para desligar.
@@ -59,6 +63,9 @@ window.PAINEL = {
   root.setProperty('--accent-deep', C.cores.destaqueEscuro);
   root.setProperty('--bg', C.cores.fundoTelao);
   root.setProperty('--ink', C.cores.texto);
+  // Tons claros derivados da cor de destaque (fundos, bordas)
+  [['--tint-0', 6], ['--tint-1', 14], ['--tint-2', 24], ['--tint-3', 40]].forEach(([v, pct]) =>
+    root.setProperty(v, `color-mix(in srgb, ${C.cores.destaque} ${pct}%, #fff)`));
 
   document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('[data-cfg]').forEach((el) => {
