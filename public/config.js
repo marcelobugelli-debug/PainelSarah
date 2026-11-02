@@ -5,17 +5,23 @@
 // =====================================================================
 window.PAINEL = {
   // Nome principal (telão, celular, moldura, título das abas)
-  nome: 'Festa da Sarah',
+  nome: 'Sarah faz 11 anos',
+
+  // Título que aparece na aba do navegador
+  tituloPagina: 'SARAH FAZ 11 ANOS · Pop Star Party',
 
   // Aniversariante e idade (aparecem em destaque nas molduras)
   aniversariante: 'Sarah',
   idade: 11,
 
   // Frase curta abaixo do nome no telão
-  subtitulo: 'Sarah faz 11 anos! 🎤✨',
+  subtitulo: 'Pop Star Party 🎤✨',
 
   // Texto da tela inicial do celular
-  chamada: 'Tire uma selfie de pop star e apareça no telão da festa!',
+  chamada: 'Escolha sua moldura, faça a pose de pop star e apareça no telão na hora.',
+
+  // Frases da faixa animada da home do celular
+  faixa: ['Tire sua foto', 'Escolha a moldura', 'Apareça no telão', 'Deixe um recado pra Sarah'],
 
   // Mensagem que aparece no telão quando chega uma foto nova
   agradecimento: 'Obrigado por vir celebrar com a Sarah! 💖',
@@ -31,10 +37,10 @@ window.PAINEL = {
 
   // Cores: destaque (botões, QR Code, moldura) e fundos
   cores: {
-    destaque: '#FF3FA4',
-    destaqueClaro: '#FF8AD0',
-    destaqueEscuro: '#7B2CBF',
-    fundoTelao: '#14061F',
+    destaque: '#FF2E93',      // rosa choque
+    destaqueClaro: '#C8A2FF', // lilás
+    destaqueEscuro: '#7B2CBF', // roxo
+    fundoTelao: '#0A0612',    // preto
     texto: '#1E1B2E',
   },
 
@@ -73,7 +79,7 @@ window.PAINEL = {
       if (v != null) el.textContent = v;
     });
     const page = document.title.split('·').pop().trim();
-    document.title = `${C.nome} · ${page}`;
+    document.title = C.tituloPagina && page !== 'Moderação' ? C.tituloPagina : `${C.nome} · ${page}`;
     const meta = document.querySelector('meta[name=theme-color]');
     if (meta) meta.content = C.cores.destaque;
   });

@@ -7,154 +7,209 @@
 <title>Mural · Sua foto no telão</title>
 <script src="/config.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Monoton&family=Outfit:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <style>
   :root {
-    --accent: #FF3FA4; --accent-2: #FF8AD0; --accent-deep: #7B2CBF;
-    --ink: #1E1B2E; --cream: var(--tint-0); --muted: #6E6A85;
+    --accent: #FF2E93; --accent-2: #C8A2FF; --accent-deep: #7B2CBF;
+    --fg: #FFFFFF; --bg: #0A0612; --panel: #170D24; --panel-2: #22133A; --line: #3A2557;
+    --muted: #B9A9D6; --pink-soft: #FF8AD0; --cream: var(--bg);
   }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   html, body { margin: 0; height: 100%; }
   body {
     font-family: 'Outfit', system-ui, -apple-system, sans-serif;
-    color: var(--ink);
-    background: var(--cream);
+    color: var(--fg);
+    background: var(--bg);
     background-image:
-      radial-gradient(circle at 10% -10%, var(--tint-1) 0, transparent 45%),
-      radial-gradient(circle at 110% 30%, var(--tint-2) 0, transparent 40%);
+      radial-gradient(120% 60% at 50% -10%, color-mix(in srgb, var(--accent-deep) 55%, transparent) 0, transparent 60%),
+      radial-gradient(80% 50% at 100% 100%, color-mix(in srgb, var(--accent) 25%, transparent) 0, transparent 60%);
+    background-attachment: fixed;
     min-height: 100dvh;
     overflow-x: hidden;
   }
-  .screen { display: none; min-height: 100dvh; padding: max(20px, env(safe-area-inset-top)) 16px max(24px, env(safe-area-inset-bottom)); flex-direction: column; align-items: center; }
+  .screen { display: none; position: relative; min-height: 100dvh; padding: max(18px, env(safe-area-inset-top)) 16px max(20px, env(safe-area-inset-bottom)); flex-direction: column; align-items: center; }
   .screen.active { display: flex; animation: fade .35s ease; }
   @keyframes fade { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 
-  .brand { font-weight: 900; letter-spacing: .08em; font-size: 15px; color: var(--accent-deep); display: flex; align-items: center; gap: 8px; }
-  .brand i { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 4px var(--tint-2); }
+  .brand { font-family: 'Anton', sans-serif; font-weight: 400; letter-spacing: .14em; font-size: 15px; color: #fff; display: flex; align-items: center; gap: 8px; text-transform: uppercase; }
+  .brand i { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 10px var(--accent), 0 0 0 3px color-mix(in srgb, var(--accent) 30%, transparent); }
 
-  /* Boas-vindas */
-  .hero { flex: 1; width: 100%; max-width: 440px; display: flex; flex-direction: column; justify-content: center; gap: 22px; text-align: center; }
-  .robot-wrap { width: 168px; height: 168px; margin: 0 auto; border-radius: 50%; background: radial-gradient(circle at 30% 25%, #FFFFFF, var(--tint-1) 60%, var(--tint-3)); display: grid; place-items: center; box-shadow: 0 18px 40px -14px color-mix(in srgb, var(--accent) 60%, transparent); }
-  .robot-wrap svg { width: 128px; margin-top: 0; animation: bob 2.6s ease-in-out infinite; }
-  @keyframes bob { 50% { transform: translateY(-6px) rotate(-3deg); } }
-  h1 { font-size: clamp(30px, 9vw, 40px); line-height: 1.05; margin: 0; font-weight: 900; }
-  h1 span { color: var(--accent); }
-  .sub { color: var(--muted); font-size: 17px; margin: 0; line-height: 1.4; }
-  label.field { text-align: left; display: block; font-weight: 600; font-size: 14px; color: var(--muted); }
+  /* ================= HOME: balada ================= */
+  #welcome { overflow: hidden; padding-left: 0; padding-right: 0; justify-content: space-between; }
+  .club { position: absolute; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+  .beam { position: absolute; top: -10%; width: 38vw; max-width: 220px; height: 120%; transform-origin: 50% 0; filter: blur(2px); opacity: .55; mix-blend-mode: screen; }
+  .beam.b1 { left: 2%; background: linear-gradient(to bottom, var(--accent), transparent 75%); clip-path: polygon(45% 0, 55% 0, 100% 100%, 0 100%); animation: sweep 6s ease-in-out infinite alternate; }
+  .beam.b2 { right: 2%; background: linear-gradient(to bottom, var(--accent-2), transparent 75%); clip-path: polygon(45% 0, 55% 0, 100% 100%, 0 100%); animation: sweep 7s ease-in-out infinite alternate-reverse; }
+  .beam.b3 { left: 40%; background: linear-gradient(to bottom, #fff, transparent 60%); clip-path: polygon(46% 0, 54% 0, 80% 100%, 20% 100%); opacity: .18; animation: sweep 9s ease-in-out infinite alternate; }
+  @keyframes sweep { from { transform: rotate(-22deg); } to { transform: rotate(22deg); } }
+  .dots { position: absolute; inset: 0; background-image: radial-gradient(#ffffff2e 1.2px, transparent 1.4px); background-size: 26px 26px; mask-image: linear-gradient(to bottom, #000, transparent 70%); }
+  .floor { position: absolute; left: -10%; right: -10%; bottom: -8%; height: 40%; background: radial-gradient(60% 70% at 50% 100%, color-mix(in srgb, var(--accent) 45%, transparent), transparent 70%); }
+  .spark { position: absolute; width: 14px; height: 14px; background: #fff; clip-path: polygon(50% 0, 60% 40%, 100% 50%, 60% 60%, 50% 100%, 40% 60%, 0 50%, 40% 40%); animation: twinkle 2.4s ease-in-out infinite; }
+  @keyframes twinkle { 0%, 100% { transform: scale(.4); opacity: .3; } 50% { transform: scale(1); opacity: 1; } }
+
+  .ticker { position: relative; z-index: 2; width: 120%; margin-left: -10%; transform: rotate(-4deg); background: var(--accent); color: #fff; font-family: 'Anton', sans-serif; font-size: 18px; letter-spacing: .12em; padding: 8px 0; overflow: hidden; white-space: nowrap; box-shadow: 0 8px 30px -6px color-mix(in srgb, var(--accent) 70%, transparent); margin-top: 6px; }
+  .ticker.alt { background: #fff; color: var(--bg); transform: rotate(3deg); margin-top: -22px; z-index: 1; opacity: .95; }
+  .ticker-track { display: inline-block; animation: marquee 18s linear infinite; }
+  .ticker.alt .ticker-track { animation-direction: reverse; animation-duration: 22s; }
+  @keyframes marquee { to { transform: translateX(-50%); } }
+
+  .hero { position: relative; z-index: 2; width: 100%; max-width: 440px; padding: 0 20px; display: flex; flex-direction: column; align-items: center; gap: 14px; text-align: center; margin: 10px 0; }
+  .disco { width: 108px; height: 132px; margin-top: -6px; filter: drop-shadow(0 0 24px color-mix(in srgb, var(--accent-2) 70%, transparent)); animation: swing 4s ease-in-out infinite; transform-origin: 50% 0; }
+  .disco svg { width: 100%; height: 100%; display: block; }
+  @keyframes swing { 50% { transform: rotate(6deg); } }
+  .kicker { margin: 0; display: inline-flex; gap: 8px; align-items: center; font-weight: 800; font-size: 12px; letter-spacing: .28em; text-transform: uppercase; color: var(--accent-2); border: 1.5px solid color-mix(in srgb, var(--accent-2) 60%, transparent); padding: 7px 14px; border-radius: 99px; background: #0A061299; backdrop-filter: blur(6px); }
+  .mega { margin: 0; line-height: .86; font-weight: 400; display: flex; flex-direction: column; align-items: center; }
+  .mega .name { font-family: 'Anton', sans-serif; font-size: clamp(76px, 26vw, 140px); letter-spacing: .02em; max-width: 100%; text-transform: uppercase; color: transparent; -webkit-text-stroke: 2.5px #fff; text-shadow: 0 0 30px color-mix(in srgb, var(--accent) 55%, transparent); position: relative; }
+  .mega .name::after { content: attr(data-txt); position: absolute; inset: 0; color: #fff; clip-path: inset(52% 0 0 0); -webkit-text-stroke: 0; background: linear-gradient(90deg, var(--accent), var(--pink-soft), var(--accent-2)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .mega .age { display: flex; align-items: center; gap: 10px; font-family: 'Anton', sans-serif; font-size: clamp(30px, 10vw, 46px); letter-spacing: .08em; text-transform: uppercase; margin-top: 6px; }
+  .mega .age b { font-family: 'Monoton', cursive; font-weight: 400; font-size: 1.8em; line-height: 1; color: #fff; text-shadow: 0 0 6px #fff, 0 0 18px var(--accent), 0 0 38px var(--accent), 0 0 70px var(--accent); animation: flicker 5s infinite; }
+  @keyframes flicker { 0%, 18%, 22%, 60%, 64%, 100% { opacity: 1; } 20%, 62% { opacity: .55; } }
+  .tagline { margin: 2px 0 0; font-family: 'Anton', sans-serif; font-size: 20px; letter-spacing: .3em; color: #fff; text-transform: uppercase; }
+  .tagline span { color: var(--accent); }
+  .sub { color: var(--muted); font-size: 16px; margin: 0; line-height: 1.4; max-width: 330px; }
+
+  .glass { width: 100%; background: color-mix(in srgb, var(--panel) 80%, transparent); border: 1px solid var(--line); border-radius: 22px; padding: 14px; backdrop-filter: blur(10px); display: flex; flex-direction: column; gap: 12px; }
+  label.field { text-align: left; display: block; font-weight: 700; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--accent-2); }
   input[type=text] {
-    width: 100%; margin-top: 6px; padding: 16px 18px; font: inherit; font-size: 18px; color: var(--ink);
-    border: 2px solid var(--tint-2); border-radius: 16px; background: #fff; outline: none; transition: border-color .2s, box-shadow .2s;
+    width: 100%; margin-top: 8px; padding: 15px 16px; font: inherit; font-size: 18px; font-weight: 600; color: #fff;
+    border: 1.5px solid var(--line); border-radius: 14px; background: #0A0612; outline: none; transition: border-color .2s, box-shadow .2s;
   }
-  input[type=text]:focus { border-color: var(--accent); box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 15%, transparent); }
+  input[type=text]::placeholder, textarea::placeholder { color: #7D6E99; }
+  input[type=text]:focus { border-color: var(--accent); box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 25%, transparent); }
 
   .btn {
-    appearance: none; border: 0; font: inherit; font-weight: 800; font-size: 18px; cursor: pointer;
-    padding: 17px 22px; border-radius: 999px; width: 100%; display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+    appearance: none; border: 0; font: inherit; font-weight: 800; font-size: 17px; cursor: pointer; letter-spacing: .04em;
+    padding: 16px 22px; border-radius: 999px; width: 100%; display: inline-flex; align-items: center; justify-content: center; gap: 10px;
     transition: transform .12s ease, box-shadow .2s;
   }
   .btn:active { transform: scale(.97); }
-  .btn-primary { color: #fff; background: linear-gradient(135deg, var(--accent-2), var(--accent-deep)); box-shadow: 0 12px 26px -10px color-mix(in srgb, var(--accent) 80%, transparent); }
-  .btn-ghost { background: #fff; color: var(--ink); border: 2px solid var(--tint-2); }
+  .btn-primary { color: #fff; background: linear-gradient(100deg, var(--accent) 0%, #FF5FB7 50%, var(--accent-deep) 100%); box-shadow: 0 0 0 1px #ffffff33 inset, 0 10px 30px -8px color-mix(in srgb, var(--accent) 85%, transparent), 0 0 24px -4px color-mix(in srgb, var(--accent) 60%, transparent); text-transform: uppercase; }
+  .btn-ghost { background: transparent; color: #fff; border: 1.5px solid var(--line); }
   .btn[disabled] { opacity: .6; pointer-events: none; }
   .btn svg { width: 22px; height: 22px; }
+  .cta-big { font-family: 'Anton', sans-serif; font-weight: 400; font-size: clamp(17px, 5.4vw, 22px); letter-spacing: .08em; padding: 17px 18px; white-space: nowrap; }
+  @media (max-height: 740px) {
+    #welcome .hero { gap: 9px; margin: 4px 0; }
+    .disco { width: 70px; height: 86px; }
+    .mega .name { font-size: clamp(64px, 22vw, 110px); }
+    .mega .age { font-size: clamp(24px, 8vw, 36px); margin-top: 2px; }
+    .sub { font-size: 14px; }
+    .glass { padding: 12px; gap: 10px; }
+    input[type=text] { padding: 12px 14px; margin-top: 6px; }
+    .ticker.alt, .foot-note { display: none; }
+  }
+  .foot-note { position: relative; z-index: 2; font-size: 11px; letter-spacing: .3em; text-transform: uppercase; color: #ffffff66; margin: 4px 0 0; }
 
-  /* Câmera */
-  #camera { background: var(--bg); color: #fff; padding-left: 0; padding-right: 0; height: 100dvh; min-height: 0; overflow: hidden; padding-top: max(12px, env(safe-area-inset-top)); padding-bottom: max(12px, env(safe-area-inset-bottom)); }
+  /* ================= Escolha da moldura ================= */
+  .frames { width: 100%; max-width: 460px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 14px 0 4px; }
+  .frame-opt { appearance: none; border: 2px solid var(--line); background: var(--panel); border-radius: 18px; padding: 8px; cursor: pointer; font: inherit; font-weight: 700; color: #fff; display: flex; flex-direction: column; gap: 6px; align-items: center; transition: border-color .2s, box-shadow .2s; }
+  .frame-opt img { width: 100%; aspect-ratio: 2 / 3; border-radius: 10px; display: block; }
+  .frame-opt.sel { border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 30%, transparent), 0 0 30px -6px var(--accent); }
+  .page-title { font-family: 'Anton', sans-serif; font-weight: 400; font-size: 34px; letter-spacing: .04em; text-transform: uppercase; margin: 12px 0 0; text-align: center; line-height: 1; }
+  .page-title span { color: var(--accent); }
+  .sticky-actions { position: sticky; bottom: 0; z-index: 3; width: 100%; max-width: 460px; display: flex; flex-direction: column; gap: 10px; margin-top: auto; padding: 14px 0 max(10px, env(safe-area-inset-bottom)); background: linear-gradient(transparent, var(--bg) 30%); }
+  .sticky-actions.row { flex-direction: row; }
+
+  /* ================= Câmera ================= */
+  #camera { background: #000; color: #fff; padding-left: 0; padding-right: 0; height: 100dvh; min-height: 0; overflow: hidden; padding-top: max(12px, env(safe-area-inset-top)); padding-bottom: max(12px, env(safe-area-inset-bottom)); }
   .stage-box { flex: 1; min-height: 0; width: 100%; display: flex; align-items: center; justify-content: center; padding: 10px 12px 0; }
-  #camera .brand { color: var(--tint-3); }
-  .stage { position: relative; height: min(100%, calc((100vw - 24px) * 1.5)); aspect-ratio: 2 / 3; flex: none; border-radius: 18px; overflow: hidden; background: #000; box-shadow: 0 20px 50px -10px #000; }
+  .stage { position: relative; height: min(100%, calc((100vw - 24px) * 1.5)); aspect-ratio: 2 / 3; flex: none; border-radius: 18px; overflow: hidden; background: #000; box-shadow: 0 0 0 1px #ffffff1a, 0 20px 50px -10px color-mix(in srgb, var(--accent) 50%, transparent); }
   .stage video { position: absolute; object-fit: cover; }
   .stage video.mirror { transform: scaleX(-1); }
   .stage img.frame { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
-  .count { position: absolute; inset: 0; display: grid; place-items: center; font-size: 150px; font-weight: 900; color: #fff; text-shadow: 0 6px 30px #0008; pointer-events: none; }
+  .stage canvas.fx { position: absolute; pointer-events: none; }
+  .stage canvas.fx.mirror { transform: scaleX(-1); }
+  .count { position: absolute; inset: 0; display: grid; place-items: center; font-family: 'Anton', sans-serif; font-size: 150px; color: #fff; text-shadow: 0 0 30px var(--accent); pointer-events: none; }
   .count.pop { animation: pop .9s ease forwards; }
   @keyframes pop { from { transform: scale(1.6); opacity: 0; } 30% { opacity: 1; transform: scale(1); } to { opacity: 0; transform: scale(.8); } }
   .flash { position: absolute; inset: 0; background: #fff; opacity: 0; pointer-events: none; }
   .flash.go { animation: flash .5s ease; }
   @keyframes flash { from { opacity: 1; } to { opacity: 0; } }
-  .controls { flex: none; display: flex; align-items: center; justify-content: space-around; width: 100%; max-width: 420px; padding: 6px 16px 0; }
-  .round { width: 56px; height: 56px; border-radius: 50%; border: 0; background: #ffffff1f; color: #fff; display: grid; place-items: center; cursor: pointer; }
-  .round svg { width: 26px; height: 26px; }
-  .shutter { width: 74px; height: 74px; border-radius: 50%; border: 5px solid #fff; background: radial-gradient(circle, var(--accent-2) 0 58%, transparent 60%); cursor: pointer; box-shadow: 0 0 0 6px color-mix(in srgb, var(--accent) 33%, transparent); transition: transform .1s; }
-  .shutter:active { transform: scale(.92); }
-  .hint { font-size: 14px; color: var(--tint-3); margin-top: 10px; text-align: center; }
-
-  /* Revisão / sucesso */
-  .result { width: 100%; max-width: 420px; flex: 1; display: flex; flex-direction: column; gap: 14px; justify-content: center; }
-  .result img.photo { width: 100%; border-radius: 18px; box-shadow: 0 22px 44px -16px color-mix(in srgb, var(--accent-deep) 53%, transparent); display: block; }
-  .result h2 { margin: 0; font-size: 28px; font-weight: 900; text-align: center; }
-  .result p { margin: 0; color: var(--muted); text-align: center; }
-  .row { display: flex; gap: 10px; }
-  .row .btn { flex: 1; white-space: nowrap; font-size: 16px; padding: 17px 14px; }
-  .spinner { width: 22px; height: 22px; border: 3px solid #fff6; border-top-color: #fff; border-radius: 50%; animation: spin .8s linear infinite; }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  .check { width: 76px; height: 76px; margin: 0 auto; border-radius: 50%; background: linear-gradient(135deg, var(--accent-2), var(--accent-deep)); display: grid; place-items: center; box-shadow: 0 12px 30px -8px color-mix(in srgb, var(--accent) 67%, transparent); animation: popin .5s cubic-bezier(.2,1.6,.4,1); }
-  .check svg { width: 40px; height: 40px; }
-  @keyframes popin { from { transform: scale(0); } to { transform: scale(1); } }
-  .error { color: #B42318; background: #FFE5DC; border-radius: 12px; padding: 10px 14px; font-size: 15px; display: none; }
-  .error.show { display: block; }
-  #fileInput { display: none; }
-
-  /* Escolha da moldura */
-  .frames { width: 100%; max-width: 460px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 14px 0 4px; }
-  .frame-opt { appearance: none; border: 3px solid transparent; background: #fff; border-radius: 18px; padding: 8px; cursor: pointer; box-shadow: 0 10px 24px -14px color-mix(in srgb, var(--accent-deep) 40%, transparent); font: inherit; font-weight: 700; color: var(--ink); display: flex; flex-direction: column; gap: 6px; align-items: center; }
-  .frame-opt img { width: 100%; aspect-ratio: 2 / 3; border-radius: 10px; display: block; }
-  .frame-opt.sel { border-color: var(--accent); box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 20%, transparent), 0 10px 24px -14px color-mix(in srgb, var(--accent-deep) 40%, transparent); }
-  .sticky-actions { position: sticky; bottom: 0; z-index: 3; width: 100%; max-width: 460px; display: flex; flex-direction: column; gap: 10px; margin-top: auto; padding: 14px 0 max(10px, env(safe-area-inset-bottom)); background: linear-gradient(transparent, var(--cream) 30%); }
-  .sticky-actions.row { flex-direction: row; }
-  .page-title { font-size: 26px; font-weight: 900; margin: 14px 0 0; text-align: center; }
-
-  /* Acessórios na câmera */
-  .stage canvas.fx { position: absolute; pointer-events: none; }
-  .stage canvas.fx.mirror { transform: scaleX(-1); }
   .chips { flex: none; display: flex; gap: 8px; overflow-x: auto; width: 100%; max-width: 460px; padding: 12px 16px 2px; scrollbar-width: none; }
   .chips::-webkit-scrollbar { display: none; }
-  .chip { flex: none; border: 0; border-radius: 999px; padding: 6px 11px; background: #ffffff1f; color: #fff; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+  .chip { flex: none; border: 1px solid #ffffff22; border-radius: 999px; padding: 6px 11px; background: #ffffff12; color: #fff; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; }
   .chip b { font-size: 18px; }
-  .chip.sel { background: var(--accent); }
-  .fx-status { flex: none; font-size: 12px; color: var(--tint-3); min-height: 16px; margin-top: 4px; text-align: center; }
+  .chip.sel { background: var(--accent); border-color: var(--accent); box-shadow: 0 0 16px -2px var(--accent); }
+  .fx-status { flex: none; font-size: 12px; color: var(--muted); min-height: 16px; margin-top: 4px; text-align: center; }
   .top-row { flex: none; display: flex; align-items: center; justify-content: space-between; width: 100%; max-width: 460px; padding: 0 16px; }
-  .link-btn { border: 0; background: #ffffff1f; color: #fff; font: inherit; font-size: 13px; font-weight: 600; padding: 7px 12px; border-radius: 999px; cursor: pointer; }
+  .link-btn { border: 1px solid #ffffff22; background: #ffffff12; color: #fff; font: inherit; font-size: 13px; font-weight: 600; padding: 7px 12px; border-radius: 999px; cursor: pointer; }
+  .controls { flex: none; display: flex; align-items: center; justify-content: space-around; width: 100%; max-width: 420px; padding: 6px 16px 0; }
+  .round { width: 54px; height: 54px; border-radius: 50%; border: 1px solid #ffffff22; background: #ffffff14; color: #fff; display: grid; place-items: center; cursor: pointer; }
+  .round svg { width: 26px; height: 26px; }
+  .shutter { width: 74px; height: 74px; border-radius: 50%; border: 5px solid #fff; background: radial-gradient(circle, var(--accent) 0 58%, transparent 60%); cursor: pointer; box-shadow: 0 0 0 6px color-mix(in srgb, var(--accent) 35%, transparent), 0 0 30px var(--accent); transition: transform .1s; }
+  .shutter:active { transform: scale(.92); }
 
-  /* Revisão: figurinhas e recado */
+  /* ================= Revisão / sucesso ================= */
+  .result { width: 100%; max-width: 420px; flex: 1; display: flex; flex-direction: column; gap: 14px; justify-content: center; margin-top: 10px; }
+  .result img.photo { width: 100%; border-radius: 16px; box-shadow: 0 0 0 1px #ffffff1a, 0 22px 44px -16px color-mix(in srgb, var(--accent) 60%, transparent); display: block; }
+  .result h2 { margin: 0; font-family: 'Anton', sans-serif; font-weight: 400; font-size: 34px; letter-spacing: .03em; text-transform: uppercase; text-align: center; line-height: 1.05; }
+  .result p { margin: 0; color: var(--muted); text-align: center; }
+  .row { display: flex; gap: 10px; }
+  .row .btn { flex: 1; white-space: nowrap; font-size: 15px; padding: 16px 12px; }
+  .spinner { width: 22px; height: 22px; border: 3px solid #fff6; border-top-color: #fff; border-radius: 50%; animation: spin .8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .check { width: 76px; height: 76px; margin: 0 auto; border-radius: 50%; background: linear-gradient(135deg, var(--accent), var(--accent-deep)); display: grid; place-items: center; box-shadow: 0 0 40px -4px var(--accent); animation: popin .5s cubic-bezier(.2,1.6,.4,1); }
+  .check svg { width: 40px; height: 40px; }
+  @keyframes popin { from { transform: scale(0); } to { transform: scale(1); } }
+  .error { color: #FFD0D8; background: #5A1030; border: 1px solid #A0204F; border-radius: 12px; padding: 10px 14px; font-size: 15px; display: none; }
+  .error.show { display: block; }
+  #fileInput { display: none; }
   .photo-wrap { position: relative; width: 100%; touch-action: none; user-select: none; -webkit-user-select: none; }
   .photo-wrap img.photo { width: 100%; }
   .sticker { position: absolute; transform: translate(-50%, -50%); line-height: 1; cursor: grab; touch-action: none; }
   .sticker.sel { outline: 2px dashed #fff; outline-offset: 4px; border-radius: 8px; filter: drop-shadow(0 0 6px var(--accent)); }
-  .stickers { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; padding: 2px 0; }
+  .stickers { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; padding: 4px 0; }
   .stickers::-webkit-scrollbar { display: none; }
-  .stickers button { flex: none; width: 46px; height: 46px; border-radius: 14px; border: 2px solid var(--tint-2); background: #fff; font-size: 26px; cursor: pointer; }
+  .stickers button { flex: none; width: 46px; height: 46px; border-radius: 14px; border: 1px solid var(--line); background: var(--panel); font-size: 26px; cursor: pointer; }
   .st-tools { display: none; gap: 8px; justify-content: center; }
   .st-tools.show { display: flex; }
-  .st-tools button { border: 2px solid var(--tint-2); background: #fff; border-radius: 999px; padding: 8px 14px; font: inherit; font-weight: 700; color: var(--ink); cursor: pointer; }
-  .small-label { font-weight: 600; font-size: 14px; color: var(--muted); }
-  textarea { width: 100%; margin-top: 6px; padding: 14px 16px; font: inherit; font-size: 17px; color: var(--ink); border: 2px solid var(--tint-2); border-radius: 16px; background: #fff; outline: none; resize: none; min-height: 84px; }
-  textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 15%, transparent); }
-  .counter-chars { text-align: right; font-size: 12px; color: var(--muted); margin-top: 4px; }
-  .msg-done { background: #fff; border-radius: 16px; padding: 12px 16px; font-style: italic; color: var(--ink); text-align: center; display: none; }
+  .st-tools button { border: 1px solid var(--line); background: var(--panel); border-radius: 999px; padding: 8px 14px; font: inherit; font-weight: 700; color: #fff; cursor: pointer; }
+  .small-label { font-weight: 700; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--accent-2); }
+  textarea { width: 100%; margin-top: 8px; padding: 14px 16px; font: inherit; font-size: 17px; color: #fff; border: 1.5px solid var(--line); border-radius: 14px; background: #0A0612; outline: none; resize: none; min-height: 84px; text-transform: none; letter-spacing: normal; font-weight: 500; }
+  textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 25%, transparent); }
+  .counter-chars { text-align: right; font-size: 12px; color: var(--muted); margin-top: -8px; }
+  .msg-done { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 12px 16px; font-style: italic; color: #fff; text-align: center; display: none; }
 </style>
 </head>
 <body>
 
-<!-- 1. Boas-vindas -->
+<!-- 1. Home -->
 <section class="screen active" id="welcome">
-  <div class="brand"><i></i> <span data-cfg="nome">Mural de Fotos</span></div>
+  <div class="club" aria-hidden="true">
+    <div class="dots"></div>
+    <div class="beam b1"></div><div class="beam b2"></div><div class="beam b3"></div>
+    <div class="floor"></div>
+    <i class="spark" style="left:12%;top:22%"></i><i class="spark" style="left:84%;top:16%;animation-delay:.8s"></i>
+    <i class="spark" style="left:76%;top:52%;animation-delay:1.4s;width:10px;height:10px"></i><i class="spark" style="left:8%;top:62%;animation-delay:.4s;width:9px;height:9px"></i>
+  </div>
+
+  <div class="ticker"><div class="ticker-track" id="tick1"></div></div>
+
   <div class="hero">
-    <div class="robot-wrap" id="heroRobot"></div>
-    <h1>Tire sua foto e <span>apareça no telão!</span></h1>
+    <div class="disco" id="heroRobot"></div>
+    <p class="kicker">✦ <span data-cfg="moldura.linha1">Pop Star Party</span> ✦</p>
+    <h1 class="mega">
+      <span class="name" id="heroName" data-cfg="aniversariante">Sarah</span>
+      <span class="age">faz <b data-cfg="idade">11</b> anos</span>
+    </h1>
     <p class="sub" data-cfg="chamada"></p>
-    <label class="field">Seu nome (opcional)
-      <input type="text" id="name" maxlength="40" placeholder="Como quer aparecer?" autocomplete="given-name">
-    </label>
-    <button class="btn btn-primary" id="start">Escolher moldura →</button>
+    <div class="glass">
+      <label class="field">Seu nome no telão
+        <input type="text" id="name" maxlength="40" placeholder="Como quer aparecer?" autocomplete="given-name">
+      </label>
+      <button class="btn btn-primary cta-big" id="start">Bora tirar a foto ✦</button>
+    </div>
     <div class="error" id="err1"></div>
   </div>
+
+  <div class="ticker alt"><div class="ticker-track" id="tick2"></div></div>
+  <p class="foot-note">foto · moldura · recado · telão</p>
 </section>
 
 <!-- 2. Moldura -->
 <section class="screen" id="choose">
   <div class="brand"><i></i> <span data-cfg="nome">Mural de Fotos</span></div>
-  <h2 class="page-title">Escolha sua moldura</h2>
+  <h2 class="page-title">Escolha sua <span>moldura</span></h2>
   <div class="frames" id="frames"></div>
   <div class="sticky-actions">
     <button class="btn btn-primary" id="openCam">
@@ -244,7 +299,13 @@
   let basePhoto = null, rawPhoto = null, finalPhoto = null;
   let stickers = [], selSticker = null;
 
-  $('heroRobot').innerHTML = F.logoSVG();
+  $('heroRobot').innerHTML = F.discoSVG();
+  // Home: nome com efeito e faixas animadas
+  const P = window.PAINEL;
+  $('heroName').textContent = P.aniversariante || P.nome; $('heroName').dataset.txt = $('heroName').textContent;
+  const tick = (P.faixa || ['Tire sua foto', 'Escolha a moldura', 'Apareça no telão', 'Deixe um recado']).map((t) => `${t} ✦ `).join('');
+  $('tick1').textContent = tick.repeat(6);
+  $('tick2').textContent = (`${(P.aniversariante || '').toUpperCase()} FAZ ${P.idade || ''} ✦ POP STAR PARTY ✦ `).repeat(8);
   try { $('name').value = localStorage.getItem('mural-name') || ''; frameId = localStorage.getItem('mural-frame') || frameId; } catch {}
   if (!F.FRAMES.some((f) => f.id === frameId)) frameId = F.FRAMES[0].id;
 

@@ -57,6 +57,27 @@
       <path d="M -22 -26 C -30 -36 -20 -44 -12 -38" stroke="#fff" stroke-width="5" fill="none" stroke-linecap="round" opacity=".9"/>
     </g>`;
   }
+  // Globo espelhado (bola de discoteca)
+  function discoBall(cx, cy, r, id = 'db') {
+    let tiles = '';
+    const rows = 9;
+    for (let i = 0; i < rows; i++) {
+      const lat = -Math.PI / 2 + (Math.PI * (i + 0.5)) / rows, y = cy + r * Math.sin(lat), rr = r * Math.cos(lat);
+      const th = (Math.PI * r) / rows, cols = Math.max(4, Math.round((2 * rr) / th));
+      for (let j = 0; j < cols; j++) {
+        const x = cx - rr + (2 * rr * (j + 0.5)) / cols, w = ((2 * rr) / cols) * 0.86;
+        const lit = ((i * 7 + j * 3) % 5);
+        const fill = lit === 0 ? '#FFFFFF' : lit === 1 ? '#FFB8E2' : lit === 2 ? '#C8A2FF' : lit === 3 ? '#8F84A8' : '#5B5072';
+        tiles += `<rect x="${(x - w / 2).toFixed(1)}" y="${(y - th * 0.43).toFixed(1)}" width="${w.toFixed(1)}" height="${(th * 0.86).toFixed(1)}" rx="1.5" fill="${fill}"/>`;
+      }
+    }
+    return `<g><line x1="${cx}" y1="${cy - r - 400}" x2="${cx}" y2="${cy - r}" stroke="#ffffff88" stroke-width="${Math.max(2, r / 30)}"/>
+      <defs><clipPath id="${id}c"><circle cx="${cx}" cy="${cy}" r="${r}"/></clipPath><radialGradient id="${id}g" cx=".35" cy=".3" r=".75"><stop offset="0" stop-color="#fff" stop-opacity=".55"/><stop offset=".6" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".45"/></radialGradient></defs>
+      <circle cx="${cx}" cy="${cy}" r="${r}" fill="#2A2140"/>
+      <g clip-path="url(#${id}c)">${tiles}</g>
+      <circle cx="${cx}" cy="${cy}" r="${r}" fill="url(#${id}g)"/>
+      ${sparkle(cx - r * 0.38, cy - r * 0.42, r * 0.28, '#FFFFFF')}${sparkle(cx + r * 0.5, cy + r * 0.2, r * 0.16, '#FFFFFF', .9)}</g>`;
+  }
   const defsBase = `<filter id="sh" x="-10%" y="-40%" width="120%" height="180%"><feDropShadow dx="0" dy="6" stdDeviation="8" flood-opacity=".3"/></filter>
     <filter id="glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="6" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
     <linearGradient id="pinkText" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="${K.destaqueClaro}"/><stop offset=".5" stop-color="${K.destaque}"/><stop offset="1" stop-color="#FFD27A"/></linearGradient>`;
@@ -69,6 +90,36 @@
   const ageBadge = (x, y, r) => AGE ? `${star(x, y, r, '#FFD27A', 0, 'filter="url(#sh)"')}<text x="${x}" y="${y + r * 0.22}" text-anchor="middle" font-family="${SANS}" font-weight="900" font-size="${r * 0.62}" fill="${K.destaqueEscuro}">${esc(AGE)}</text>` : '';
 
   const FRAMES = [
+    {
+      id: 'balada', nome: 'Balada',
+      hole: { x: 90, y: 330, w: 900, h: 1010 },
+      draw(name, date) {
+        const h = this.hole, hp = roundRect(h, 40), r = rng(23);
+        let lights = '';
+        for (let i = 0; i < 40; i++) { const x = r() * W, y = r() * H; if (outside(h, x, y, 26)) lights += `<circle cx="${x.toFixed(0)}" cy="${y.toFixed(0)}" r="${(4 + r() * 12).toFixed(1)}" fill="${['#FF2E93', '#C8A2FF', '#FFFFFF', '#FF8AD0'][Math.floor(r() * 4)]}" opacity="${(0.15 + r() * 0.5).toFixed(2)}"/>`; }
+        const neon = (c, w = 5) => `stroke="${c}" stroke-width="${w}" fill="none" filter="url(#neonGlow)"`;
+        return svg(`${paper('#0A0612', hp)}
+          <clipPath id="outB"><path clip-rule="evenodd" d="M0 0 H${W} V${H} H0 Z ${hp}"/></clipPath>
+          <g clip-path="url(#outB)">
+            <polygon points="540,0 600,0 1180,1620 820,1620" fill="url(#bm1)"/>
+            <polygon points="480,0 540,0 260,1620 -100,1620" fill="url(#bm2)"/>
+            ${lights}
+          </g>
+          ${discoBall(790, 78, 50, 'fb')}
+          <text x="60" y="250" font-family="${SANS}" font-weight="900" font-size="${Math.min(170, Math.round(900 / Math.max(4, STAR.length)))}" letter-spacing="6" ${neon(K.destaque)}>${esc(STAR.toUpperCase())}</text>
+          <text x="60" y="250" font-family="${SANS}" font-weight="900" font-size="${Math.min(170, Math.round(900 / Math.max(4, STAR.length)))}" letter-spacing="6" fill="none" stroke="#FFFFFF" stroke-width="1.6">${esc(STAR.toUpperCase())}</text>
+          ${AGE ? `<circle cx="930" cy="205" r="88" ${neon(K.destaqueClaro)}/><text x="930" y="245" text-anchor="middle" font-family="${SANS}" font-weight="900" font-size="110" fill="#FFFFFF" filter="url(#neonGlow)">${esc(AGE)}</text>` : ''}
+          <text x="60" y="305" font-family="${SANS}" font-weight="800" font-size="30" letter-spacing="14" fill="${K.destaqueClaro}">${esc((C.moldura && C.moldura.linha1) || 'POP STAR PARTY')}</text>
+          <path d="${hp}" ${neon(K.destaque, 8)}/>
+          <path d="${roundRect({ x: h.x - 18, y: h.y - 18, w: h.w + 36, h: h.h + 36 }, 54)}" ${neon(K.destaqueClaro, 3)} stroke-dasharray="2 14" stroke-linecap="round"/>
+          <text x="${W / 2}" y="1450" text-anchor="middle" font-family="${SANS}" font-weight="900" font-size="54" fill="#FFFFFF" filter="url(#neonGlow)">${label(name).toUpperCase()}</text>
+          <text x="${W / 2}" y="1520" text-anchor="middle" font-family="${SANS}" font-weight="700" font-size="28" letter-spacing="10" fill="${K.destaque}">${esc(C.nome.toUpperCase())}</text>
+          ${date ? `<text x="${W / 2}" y="1575" text-anchor="middle" font-family="${SANS}" font-size="24" letter-spacing="6" fill="#FFFFFF88">${esc(date)}</text>` : ''}`,
+        `<filter id="neonGlow" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="7" result="b1"/><feGaussianBlur in="SourceGraphic" stdDeviation="2" result="b2"/><feMerge><feMergeNode in="b1"/><feMergeNode in="b1"/><feMergeNode in="b2"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+         <linearGradient id="bm1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${K.destaque}" stop-opacity=".55"/><stop offset="1" stop-color="${K.destaque}" stop-opacity="0"/></linearGradient>
+         <linearGradient id="bm2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${K.destaqueClaro}" stop-opacity=".5"/><stop offset="1" stop-color="${K.destaqueClaro}" stop-opacity="0"/></linearGradient>`);
+      },
+    },
     {
       id: 'palco', nome: 'Palco',
       hole: { x: 80, y: 280, w: 920, h: 1080 },
@@ -113,7 +164,7 @@
           <path d="M0 0 H${W} V${H} H0 Z ${hp}" fill-rule="evenodd" fill="url(#sheen)"/>
           ${deco}
           <path d="${hp}" fill="none" stroke="#FFFFFF" stroke-width="16"/>
-          <text x="${W / 2}" y="${AGE ? 150 : 175}" text-anchor="middle" font-family="${SANS}" font-weight="900" font-size="96" fill="#FFFFFF" filter="url(#sh)">${esc(C.nome)}</text>
+          <text x="${W / 2}" y="${AGE ? 150 : 175}" text-anchor="middle" font-family="${SANS}" font-weight="900" font-size="120" letter-spacing="6" fill="#FFFFFF" filter="url(#sh)">${esc(STAR.toUpperCase())}</text>
           ${AGE ? `<text x="${W / 2}" y="225" text-anchor="middle" font-family="${SANS}" font-weight="800" font-size="44" fill="${K.destaqueEscuro}">✦ ${esc(AGE)} anos ✦</text>` : ''}
           ${pill(label(name), 1430, '#FFFFFF', K.destaque)}
           ${date ? `<text x="${W / 2}" y="1570" text-anchor="middle" font-family="${SANS}" font-weight="600" font-size="28" fill="${K.destaqueEscuro}">${esc(date)}</text>` : ''}`,
@@ -202,6 +253,11 @@
     return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(s2.slice(0, i) + person + s2.slice(i));
   }
 
+  // Globo espelhado para a home do celular
+  function discoSVG() {
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 240">${discoBall(100, 140, 92, 'home').replace('y1="' + (140 - 92 - 400) + '"', 'y1="0"')}</svg>`;
+  }
+
   // Ícone do mural (microfone)
   function logoSVG() {
     return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" fill="${K.destaque}"/>
@@ -209,5 +265,5 @@
       <path d="M 74 22 l 3 7 7 3 -7 3 -3 7 -3 -7 -7 -3 7 -3 z" fill="#FFD27A"/></svg>`;
   }
 
-  window.PainelFrame = { W, H, FRAMES, byId, frameSVG, frameImage, thumbURL, logoSVG };
+  window.PainelFrame = { W, H, FRAMES, byId, frameSVG, frameImage, thumbURL, logoSVG, discoSVG };
 })();
