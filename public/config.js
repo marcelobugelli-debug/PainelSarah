@@ -51,6 +51,8 @@ window.PAINEL = {
     grupo: '/img/popstars.jpg',             // telão (tela inicial e vitrine)
     faixaGrupo: '/img/popstars-linha.jpg',  // moldura "Pop Stars" (grupo lado a lado)
     dupla: '/img/sarah-dupla.jpg',          // vitrine do telão
+    recorteAniversariante: '/img/sarah-recorte.webp', // Sarah sem fundo (realidade aumentada)
+    recorteGrupo: '/img/grupo-recorte.webp',           // grupo sem fundo (realidade aumentada)
   },
 
   // Palquinho do telão (canto superior direito): fotos que a luz vai mostrando, uma de cada vez

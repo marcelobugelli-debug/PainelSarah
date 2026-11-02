@@ -126,6 +126,11 @@
   .stage img.frame { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
   .stage canvas.fx { position: absolute; pointer-events: none; }
   .stage canvas.fx.mirror { transform: scaleX(-1); }
+  .stage canvas.arview { position: absolute; inset: 0; width: 100%; height: 100%; display: none; }
+  .stage.ar canvas.arview { display: block; }
+  .stage.ar video { opacity: 0; }
+  .stage.ar img.frame, .stage.ar canvas.fx { display: none; }
+  .frame-opt .badge { display: block; font-size: 10px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--accent-2); margin-top: -2px; }
   .count { position: absolute; inset: 0; display: grid; place-items: center; font-family: 'Anton', sans-serif; font-size: 150px; color: #fff; text-shadow: 0 0 30px var(--accent); pointer-events: none; }
   .count.pop { animation: pop .9s ease forwards; }
   @keyframes pop { from { transform: scale(1.6); opacity: 0; } 30% { opacity: 1; transform: scale(1); } to { opacity: 0; transform: scale(.8); } }
@@ -239,6 +244,7 @@
   <div class="stage-box"><div class="stage" id="stage">
     <video id="video" playsinline autoplay muted class="mirror"></video>
     <canvas class="fx mirror" id="fx"></canvas>
+    <canvas class="arview" id="arView"></canvas>
     <img class="frame" id="frameOverlay" alt="">
     <div class="count" id="count"></div>
     <div class="flash" id="flash"></div>
@@ -297,6 +303,7 @@
 
 <script src="/frame.js"></script>
 <script src="/acessorios.js"></script>
+<script src="/ar.js"></script>
 <script>
 (() => {
   const $ = (id) => document.getElementById(id);
@@ -343,7 +350,7 @@
     F.FRAMES.forEach((f) => {
       const b = document.createElement('button');
       b.className = 'frame-opt' + (f.id === frameId ? ' sel' : '');
-      b.innerHTML = `<img alt=""><span>${f.nome}</span>`;
+      b.innerHTML = `<img alt=""><span>${f.nome}${f.badge ? `<small class="badge">${f.badge}</small>` : ''}</span>`;
       const key = f.id + '|' + getName();
       (thumbs[key] = thumbs[key] || F.thumb(f.id, getName())).then((u) => { b.querySelector('img').src = u; }).catch(() => {});
       b.onclick = () => { frameId = f.id; try { localStorage.setItem('mural-frame', frameId); } catch {} renderFrames(); warmFrame(); };
@@ -352,13 +359,23 @@
     warmFrame();
   }
   function placeVideo() {
-    const h = hole();
+    const h = isAR() ? { x: 0, y: 0, w: F.W, h: F.H } : hole();
     const box = { left: (h.x / F.W * 100) + '%', top: (h.y / F.H * 100) + '%', width: (h.w / F.W * 100) + '%', height: (h.h / F.H * 100) + '%' };
     Object.assign($('video').style, box);
     Object.assign($('fx').style, box);
   }
-  let overlayKey = '';
+  let overlayKey = '', arP = null;
+  const isAR = () => !!F.byId(frameId).ar;
   async function prepareFrame() {
+    $('stage').classList.toggle('ar', isAR());
+    if (isAR()) {
+      arP = await F.arParts(frameId);
+      placeVideo();
+      $('fxStatus').textContent = 'Preparando o palco…';
+      AR.carregar().then(() => { if (isAR()) $('fxStatus').textContent = F.byId(frameId).dica || ''; })
+        .catch((e) => { console.warn('AR', e); if (isAR()) $('fxStatus').textContent = 'O efeito de palco não funcionou neste celular, mas a foto sai normalmente.'; });
+      return;
+    }
     frameImg = await warmFrame();
     if (overlayKey !== frameKey) {
       overlayKey = frameKey;
@@ -399,7 +416,7 @@
   }
   async function chooseFx(id) {
     fxKind = id; renderChips();
-    if (id === 'nenhum') { $('fxStatus').textContent = 'Escolha um acessório (opcional)'; return; }
+    if (id === 'nenhum') { $('fxStatus').textContent = isAR() ? (F.byId(frameId).dica || '') : 'Escolha um acessório (opcional)'; return; }
     if (!A.pronto()) {
       $('fxStatus').textContent = 'Carregando acessórios…';
       try { await A.carregar(); } catch (e) {
@@ -420,7 +437,13 @@
       if (c.width !== Math.round(cw * dpr)) { c.width = Math.round(cw * dpr); c.height = Math.round(ch * dpr); }
       const ctx = c.getContext('2d');
       ctx.clearRect(0, 0, c.width, c.height);
-      if (fxKind !== 'nenhum' && A.pronto() && v.videoWidth) {
+      if (isAR() && arP && v.videoWidth) {
+        if (fxKind !== 'nenhum' && A.pronto()) faces = A.suavizar(A.detectar(v, v.videoWidth, v.videoHeight)); else faces = [];
+        const av = $('arView'), dpr2 = Math.min(2, window.devicePixelRatio || 1);
+        const aw = Math.min(720, Math.round(av.clientWidth * dpr2)), ah = Math.round(aw * F.H / F.W);
+        if (av.width !== aw) { av.width = aw; av.height = ah; }
+        drawAR(av.getContext('2d'), aw, ah, v, v.videoWidth, v.videoHeight, facing === 'user', faces, liveMask(v));
+      } else if (fxKind !== 'nenhum' && A.pronto() && v.videoWidth) {
         faces = A.suavizar(A.detectar(v, v.videoWidth, v.videoHeight));
         const s = Math.max(c.width / v.videoWidth, c.height / v.videoHeight);
         const ox = (c.width - v.videoWidth * s) / 2, oy = (c.height - v.videoHeight * s) / 2;
@@ -429,6 +452,31 @@
       raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
+  }
+
+  // ---------- Realidade aumentada ----------
+  const personC = document.createElement('canvas');
+  let lastMask = null, lastMaskAt = 0;
+  function drawAR(ctx, cw, ch, src, sw, sh, mirror, fx, mask) {
+    ctx.clearRect(0, 0, cw, ch);
+    ctx.drawImage(arP.back, 0, 0, cw, ch);
+    if (personC.width !== cw || personC.height !== ch) { personC.width = cw; personC.height = ch; }
+    const p = personC.getContext('2d');
+    p.setTransform(1, 0, 0, 1, 0, 0); p.globalCompositeOperation = 'source-over'; p.clearRect(0, 0, cw, ch);
+    const s = Math.max(cw / sw, ch / sh), dw = sw * s, dh = sh * s, ox = (cw - dw) / 2, oy = (ch - dh) / 2;
+    if (mirror) { p.translate(cw, 0); p.scale(-1, 1); }
+    p.drawImage(src, ox, oy, dw, dh);
+    if (mask) { p.globalCompositeOperation = 'destination-in'; p.drawImage(mask, ox, oy, dw, dh); p.globalCompositeOperation = 'source-over'; }
+    if (fx && fx.length && fxKind !== 'nenhum') A.desenhar(p, fx, fxKind, (pt) => ({ x: ox + pt.x * s, y: oy + pt.y * s }));
+    p.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.drawImage(personC, 0, 0);
+    ctx.drawImage(arP.front, 0, 0, cw, ch);
+  }
+  function liveMask(v) {
+    if (!AR.pronto()) return null;
+    const now = performance.now();
+    if (!lastMask || now - lastMaskAt > 50) { lastMask = AR.mascara(v, v.videoWidth, v.videoHeight); lastMaskAt = now; }
+    return lastMask;
   }
 
   // ---------- Montagem da foto ----------
@@ -446,6 +494,11 @@
     const c = document.createElement('canvas');
     c.width = F.W; c.height = F.H;
     const ctx = c.getContext('2d');
+    if (isAR() && arP) {
+      const mask = AR.pronto() ? AR.mascara(source, sw, sh) : null;
+      drawAR(ctx, F.W, F.H, source, sw, sh, mirror, fx, mask);
+      return c.toDataURL('image/jpeg', 0.88);
+    }
     const { x, y, w, h } = hole();
     const scale = Math.max(w / sw, h / sh);
     const dw = sw * scale, dh = sh * scale, ox = x + (w - dw) / 2, oy = y + (h - dh) / 2;
@@ -491,7 +544,7 @@
         return showErr($('err0'), `Essa moldura não carregou neste celular (${(e2 && e2.message) || 'erro'}). Tente outra moldura ou recarregue a página.`);
       }
     }
-    try { await cam; renderChips(); show('camera'); }
+    try { await cam; renderChips(); show('camera'); if (!isAR()) $('fxStatus').textContent = 'Escolha um acessório (opcional)'; }
     catch (e) {
       console.warn('Câmera ao vivo indisponível', e);
       showErr($('err0'), 'Não conseguimos abrir a câmera aqui. Libere a câmera para este site ou use o botão abaixo.');

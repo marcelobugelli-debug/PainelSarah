@@ -39,6 +39,8 @@
     loadFont('PS Monoton', '/fonts/monoton.woff2', 'Monoton'),
     loadImg(ART.faixaGrupo).then((im) => { IMG.faixa = im; }),
     loadImg(ART.aniversariante).then((im) => { IMG.sarah = im; }),
+    loadImg(ART.recorteAniversariante).then((im) => { IMG.sarahCut = im; }),
+    loadImg(ART.recorteGrupo).then((im) => { IMG.grupoCut = im; }),
   ]).catch(() => {});
 
   // ---------- Utilitários ----------
@@ -70,10 +72,77 @@
     <rect x="${-w / 2}" y="${-h / 2}" width="${w}" height="${h}" fill="${fill}"/>
     ${text ? `<text x="0" y="${size * .36}" text-anchor="middle" font-family="${DISP}" font-size="${size}" letter-spacing="3" fill="${tc}">${text}</text>` : ''}</g>`;
 
+  // Palco (fundo das molduras de realidade aumentada)
+  function stageSVG(seed = 11) {
+    let s2 = seed; const r = () => (s2 = (s2 * 16807) % 2147483647) / 2147483647;
+    let sp = '';
+    for (let i = 0; i < 46; i++) { const x = r() * W, y = r() * 1150; sp += r() < 0.3 ? spark(x, y, 6 + r() * 14, r() < 0.5 ? '#FFFFFF' : LILAC, 0.5 + r() * 0.5) : `<circle cx="${x.toFixed(0)}" cy="${y.toFixed(0)}" r="${(1.5 + r() * 3).toFixed(1)}" fill="#FFFFFF" opacity="${(0.2 + r() * 0.6).toFixed(2)}"/>`; }
+    const beam = (x, ang, color, op) => `<polygon transform="rotate(${ang} ${x} 40)" points="${x - 14},40 ${x + 14},40 ${x + 260},1500 ${x - 260},1500" fill="url(#bm${color})" opacity="${op}"/>`;
+    let truss = ''; for (let i = 0; i < 13; i++) { const x = 60 + i * 80; truss += `<circle cx="${x}" cy="60" r="14" fill="url(#lamp)"/><circle cx="${x}" cy="60" r="5" fill="#FFFFFF"/>`; }
+    return svg(`
+      <radialGradient id="sky" cx=".5" cy=".42" r=".85"><stop offset="0" stop-color="#4A1C86"/><stop offset=".5" stop-color="#1E0A3A"/><stop offset="1" stop-color="#07030D"/></radialGradient>
+      <linearGradient id="bmP" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${PINK}" stop-opacity=".75"/><stop offset="1" stop-color="${PINK}" stop-opacity="0"/></linearGradient>
+      <linearGradient id="bmL" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${LILAC}" stop-opacity=".7"/><stop offset="1" stop-color="${LILAC}" stop-opacity="0"/></linearGradient>
+      <linearGradient id="bmW" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFFFFF" stop-opacity=".45"/><stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/></linearGradient>
+      <radialGradient id="lamp"><stop offset="0" stop-color="#FFFFFF"/><stop offset=".4" stop-color="${LILAC}" stop-opacity=".8"/><stop offset="1" stop-color="${LILAC}" stop-opacity="0"/></radialGradient>
+      <radialGradient id="floorG" cx=".5" cy=".3" r=".6"><stop offset="0" stop-color="${PINK}" stop-opacity=".85"/><stop offset=".45" stop-color="#8E3BD8" stop-opacity=".6"/><stop offset="1" stop-color="#1E0A3A" stop-opacity="0"/></radialGradient>
+      <linearGradient id="deck" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2A0F4D"/><stop offset="1" stop-color="#0B0416"/></linearGradient>
+      <radialGradient id="haze" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#FFFFFF" stop-opacity=".12"/><stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/></radialGradient>`, `
+      <rect width="${W}" height="${H}" fill="url(#sky)"/>
+      ${sp}
+      ${beam(150, -14, 'P', .9)}${beam(930, 14, 'L', .9)}${beam(540, 0, 'W', .7)}${beam(330, -6, 'L', .5)}${beam(750, 6, 'P', .5)}
+      <rect x="0" y="40" width="${W}" height="40" fill="#120720"/>${truss}
+      <ellipse cx="300" cy="900" rx="420" ry="260" fill="url(#haze)"/><ellipse cx="820" cy="1000" rx="420" ry="240" fill="url(#haze)"/>
+      <path d="M0 1330 Q 540 1250 1080 1330 V 1620 H 0 Z" fill="url(#deck)"/>
+      <ellipse cx="540" cy="1420" rx="620" ry="190" fill="url(#floorG)"/>
+      <path d="M0 1330 Q 540 1250 1080 1330" fill="none" stroke="${LILAC}" stroke-opacity=".7" stroke-width="4"/>`);
+  }
+  // Silhueta genérica (miniaturas das molduras de realidade aumentada)
+  const silhouette = `<g fill="#6B5A8E" opacity=".9"><circle cx="540" cy="760" r="170"/><path d="M 200 1620 Q 200 980 540 980 Q 880 980 880 1620 Z"/></g>`;
+
   const FRAMES = [
+    // ================================================== REALIDADE AUMENTADA (sem textos)
+    {
+      id: 'ar-palco', nome: 'No palco', badge: '✨ realidade aumentada', ar: true,
+      dica: 'Você no palco! Afaste um pouco o celular para aparecer mais.',
+      hole: { x: 0, y: 0, w: W, h: H },
+      bg: () => stageSVG(11),
+    },
+    {
+      id: 'ar-sarah', nome: `Ao lado da ${STAR}`, badge: '✨ realidade aumentada', ar: true,
+      dica: `Fique do lado direito da tela para posar com a ${STAR}.`,
+      hole: { x: 0, y: 0, w: W, h: H },
+      bg: () => stageSVG(23),
+      front: [{ key: 'sarahCut', x: -10, y: 520, w: 470, h: 1080, fit: 'contain', align: 'bottom' }],
+    },
+    {
+      id: 'ar-popstars', nome: 'Com as Pop Stars', badge: '✨ realidade aumentada', ar: true,
+      dica: 'Fique no meio da tela: as Pop Stars aparecem dos dois lados.',
+      hole: { x: 0, y: 0, w: W, h: H },
+      bg: () => stageSVG(37),
+      behind: [
+        { key: 'grupoCut', x: 330, y: 800, w: 790, h: 780, fit: 'contain', align: 'bottom', halign: 'right', cx0: 0.5, cx1: 1 },
+        { key: 'grupoCut', x: -40, y: 800, w: 790, h: 780, fit: 'contain', align: 'bottom', halign: 'left', cx0: 0, cx1: 0.5 },
+      ],
+    },
+    // ================================================== BÁSICA (grupos)
+    {
+      id: 'basica', nome: 'Básica (grupo)',
+      hole: { x: 34, y: 34, w: 1012, h: 1456 },
+      draw() {
+        const hp = holePath(this.hole, 28);
+        return svg(`
+          <linearGradient id="bgBa" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${PINK}"/><stop offset=".55" stop-color="${PURPLE}"/><stop offset="1" stop-color="${INK}"/></linearGradient>`, `
+          ${paper('url(#bgBa)', hp)}
+          <path d="${hp}" fill="none" stroke="#FFFFFF" stroke-opacity=".85" stroke-width="4"/>
+          ${spark(110, 1556, 16, '#FFFFFF')}${spark(970, 1556, 16, '#FFFFFF')}
+          <text x="${W / 2}" y="1578" text-anchor="middle" font-family="${DISP}" font-size="64" letter-spacing="10" fill="#FFFFFF">${esc(STAR.toUpperCase())} ${esc(AGE)}</text>`);
+      },
+    },
+    // ================================================== MOLDURAS CLÁSSICAS
     // ---------------------------------------------------------------- POP STARS
     {
-      id: 'popstars', nome: 'Pop Stars',
+      id: 'popstars', nome: 'Faixa Pop Stars',
       hole: { x: 0, y: 0, w: W, h: 1120 },
       // grupo inteiro (sem cortar ninguém), esfumado no topo e nas laterais
       layers: [{ key: 'faixa', x: 0, y: 1040, w: W, h: 580, fit: 'contain', align: 'bottom', fadeTop: 110 }],
@@ -105,7 +174,7 @@
     },
     // ---------------------------------------------------------------- COM A SARAH
     {
-      id: 'comsarah', nome: `Com a ${STAR}`,
+      id: 'comsarah', nome: `Polaroid da ${STAR}`,
       hole: { x: 56, y: 56, w: 968, h: 1010 },
       layers: [{ key: 'sarah', x: 86, y: 1012, w: 356, h: 400, align: 'top', rot: -6, cx: 264, cy: 1250 }],
       draw() {
@@ -226,8 +295,10 @@
     const oc = document.createElement('canvas'); oc.width = L.w; oc.height = L.h;
     const o = oc.getContext('2d'), im = IMG[L.key];
     if (im) {
-      const sc = (L.fit === 'contain' ? Math.min : Math.max)(L.w / im.naturalWidth, L.h / im.naturalHeight), dw = im.naturalWidth * sc, dh = im.naturalHeight * sc;
-      o.drawImage(im, (L.w - dw) / 2, L.align === 'top' ? 0 : L.align === 'bottom' ? L.h - dh : (L.h - dh) / 2, dw, dh);
+      const sx = im.naturalWidth * (L.cx0 || 0), sw = im.naturalWidth * ((L.cx1 ?? 1) - (L.cx0 || 0)), sh0 = im.naturalHeight;
+      const sc = (L.fit === 'contain' ? Math.min : Math.max)(L.w / sw, L.h / sh0), dw = sw * sc, dh = sh0 * sc;
+      const dx = L.halign === 'left' ? 0 : L.halign === 'right' ? L.w - dw : (L.w - dw) / 2;
+      o.drawImage(im, sx, 0, sw, sh0, dx, L.align === 'top' ? 0 : L.align === 'bottom' ? L.h - dh : (L.h - dh) / 2, dw, dh);
     } else { o.fillStyle = PURPLE; o.fillRect(0, 0, L.w, L.h); }
     if (L.fadeTop) {
       o.globalCompositeOperation = 'destination-in';
@@ -253,7 +324,34 @@
     ctx.beginPath(); ctx.moveTo(cx - 300 * s, h.y + h.h); ctx.quadraticCurveTo(cx - 300 * s, cy + 80 * s, cx, cy + 80 * s); ctx.quadraticCurveTo(cx + 300 * s, cy + 80 * s, cx + 300 * s, h.y + h.h); ctx.fill();
   }
   // Monta a moldura num canvas (scale < 1 para miniaturas)
+  // Partes da moldura de realidade aumentada: fundo (palco + quem fica atrás) e frente
+  const arCache = {};
+  function arParts(id) {
+    if (!arCache[id]) arCache[id] = (async () => {
+      await ready;
+      const f = byId(id);
+      const back = document.createElement('canvas'); back.width = W; back.height = H;
+      const b = back.getContext('2d');
+      b.drawImage(await svgImage(f.bg()), 0, 0, W, H);
+      (f.behind || []).forEach((L) => drawLayer(b, L));
+      const front = document.createElement('canvas'); front.width = W; front.height = H;
+      const fc = front.getContext('2d');
+      (f.front || []).forEach((L) => drawLayer(fc, L));
+      return { back, front };
+    })();
+    arCache[id].catch(() => { delete arCache[id]; });
+    return arCache[id];
+  }
   async function render(id, name, date, scale = 1, withPlaceholder = false) {
+    if (byId(id).ar) {
+      const { back, front } = await arParts(id);
+      const c = document.createElement('canvas'); c.width = Math.round(W * scale); c.height = Math.round(H * scale);
+      const ctx = c.getContext('2d'); ctx.scale(scale, scale);
+      ctx.drawImage(back, 0, 0);
+      if (withPlaceholder) ctx.drawImage(await svgImage(svg('', silhouette)), 0, 0, W, H);
+      ctx.drawImage(front, 0, 0);
+      return c;
+    }
     await ready;
     const f = byId(id), c = document.createElement('canvas');
     c.width = Math.round(W * scale); c.height = Math.round(H * scale);
@@ -285,5 +383,5 @@
     return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" fill="${PINK}"/><text x="50" y="66" text-anchor="middle" font-family="${DISP}" font-size="46" fill="#fff">${esc(AGE || '★')}</text></svg>`;
   }
 
-  window.PainelFrame = { W, H, FRAMES, byId, render, frameImage, thumb, logoSVG, discoSVG, ready };
+  window.PainelFrame = { W, H, FRAMES, byId, render, frameImage, thumb, arParts, logoSVG, discoSVG, ready };
 })();
