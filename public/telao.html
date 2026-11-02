@@ -11,7 +11,7 @@
   :root {
     --accent: #FF3FA4; --accent-2: #FF8AD0; --accent-deep: #7B2CBF;
     --bg: #14061F; --ink: #1E1B2E; --text: #F3F2FA; --muted: #B9B5D0;
-    --side: clamp(260px, 22vw, 400px);
+    --side: clamp(190px, 14vw, 270px);
   }
   * { box-sizing: border-box; }
   html, body { margin: 0; height: 100%; overflow: hidden; }
@@ -26,7 +26,8 @@
   @keyframes drift { to { transform: translate(6vw, 4vh) scale(1.15); } }
   .grain { position: absolute; inset: 0; background-image: radial-gradient(#ffffff10 1px, transparent 1px); background-size: 22px 22px; }
 
-  .app { position: relative; z-index: 1; height: 100vh; display: grid; grid-template-columns: 1fr var(--side); gap: 2.2vw; padding: 2.4vw; }
+  .app { position: relative; z-index: 1; height: 100vh; display: grid; grid-template-columns: 1fr var(--side); column-gap: 2vw; padding: 2.4vw; transition: grid-template-columns .45s ease, column-gap .45s ease; }
+  .app.no-side { grid-template-columns: 1fr 0px; column-gap: 0; }
 
   /* Cabeçalho + mural */
   .main { position: relative; display: flex; flex-direction: column; min-width: 0; min-height: 0; }
@@ -57,17 +58,18 @@
   @keyframes bob { 50% { transform: translateY(-10px) rotate(-3deg); } }
 
   /* Lateral com QR Code */
-  aside { display: flex; flex-direction: column; gap: 1.4vw; min-height: 0; }
-  .qr-card { background: linear-gradient(160deg, var(--accent-2), var(--accent-deep)); border-radius: 1.6vw; padding: 1.8vw; text-align: center; color: #fff; box-shadow: 0 2vw 4vw -2vw color-mix(in srgb, var(--accent) 67%, transparent); position: relative; overflow: hidden; }
+  aside { display: flex; flex-direction: column; gap: .9vw; min-height: 0; min-width: 0; overflow: hidden; transition: opacity .3s ease; }
+  .app.no-side aside { opacity: 0; pointer-events: none; }
+  .qr-card { background: linear-gradient(160deg, var(--accent-2), var(--accent-deep)); border-radius: 1.3vw; padding: 1.1vw; text-align: center; color: #fff; box-shadow: 0 2vw 4vw -2vw color-mix(in srgb, var(--accent) 67%, transparent); position: relative; overflow: hidden; }
   .qr-card::after { content: ''; position: absolute; width: 60%; aspect-ratio: 1; border-radius: 50%; background: #ffffff1a; right: -20%; top: -20%; }
-  .qr-card h2 { margin: 0 0 1.2vw; font-size: clamp(20px, 1.9vw, 40px); font-weight: 900; line-height: 1.1; position: relative; z-index: 1; }
+  .qr-card h2 { margin: 0 0 .8vw; font-size: clamp(15px, 1.25vw, 26px); font-weight: 900; line-height: 1.1; position: relative; z-index: 1; }
   .qr-box { background: #fff; border-radius: 1.2vw; padding: 1.1vw; aspect-ratio: 1; display: grid; place-items: center; position: relative; z-index: 1; animation: pulse 2.8s ease-in-out infinite; }
   @keyframes pulse { 50% { box-shadow: 0 0 0 .8vw #ffffff40; } }
   #qr, #qr img, #qr canvas { width: 100% !important; height: auto !important; display: block; image-rendering: pixelated; }
-  .url { margin-top: 1vw; font-size: clamp(11px, .85vw, 18px); font-weight: 600; opacity: .9; word-break: break-all; position: relative; z-index: 1; }
+  .url { margin-top: .6vw; font-size: clamp(10px, .7vw, 15px); font-weight: 600; opacity: .9; word-break: break-all; position: relative; z-index: 1; }
   .steps { list-style: none; margin: 0; padding: 0; display: grid; gap: .9vw; }
-  .steps li { display: flex; align-items: center; gap: 1vw; background: #ffffff0d; border: 1px solid #ffffff17; border-radius: 1vw; padding: 1vw 1.1vw; font-size: clamp(14px, 1.15vw, 24px); font-weight: 600; }
-  .steps li span { flex: none; width: 2.3vw; height: 2.3vw; min-width: 30px; min-height: 30px; border-radius: 50%; display: grid; place-items: center; background: var(--accent); color: #fff; font-weight: 900; }
+  .steps li { display: flex; align-items: center; gap: .7vw; background: #ffffff0d; border: 1px solid #ffffff17; border-radius: .8vw; padding: .6vw .8vw; font-size: clamp(11px, .82vw, 17px); font-weight: 600; line-height: 1.25; }
+  .steps li span { flex: none; width: 1.7vw; height: 1.7vw; min-width: 22px; min-height: 22px; border-radius: 50%; display: grid; place-items: center; background: var(--accent); color: #fff; font-weight: 900; }
 
   /* Destaque da nova foto */
   .spot { position: fixed; inset: 0; z-index: 10; display: grid; place-items: center; background: color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter: blur(8px); opacity: 0; pointer-events: none; transition: opacity .5s ease; }
@@ -101,6 +103,10 @@
   @keyframes nudge { 50% { transform: translateX(-50%) scale(1.06); } }
   .confetti { position: fixed; inset: 0; z-index: 11; pointer-events: none; }
 
+  /* Botão para mostrar/esconder a lateral do QR Code */
+  .side-btn { position: fixed; right: 0; top: 50%; transform: translateY(-50%); z-index: 20; border: 0; border-radius: 14px 0 0 14px; padding: 14px 10px; background: #ffffff1c; color: #fff; font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; writing-mode: vertical-rl; letter-spacing: .08em; opacity: .25; transition: opacity .3s, background .3s; }
+  .side-btn:hover, body:hover .side-btn { opacity: .85; }
+  .app.no-side ~ .side-btn { background: var(--accent); opacity: .7; }
   .fs-btn { position: fixed; right: 1vw; bottom: 1vw; z-index: 20; border: 0; border-radius: 99px; padding: 8px 14px; background: #ffffff14; color: #fff; font: inherit; font-size: 13px; cursor: pointer; opacity: 0; transition: opacity .3s; }
   body:hover .fs-btn { opacity: .8; }
   .live { display: inline-flex; align-items: center; gap: .5vw; }
@@ -112,7 +118,7 @@
 <body>
 <div class="bg"><div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div><div class="grain"></div></div>
 
-<div class="app">
+<div class="app" id="app">
   <section class="main">
     <header>
       <div class="title">
@@ -148,6 +154,8 @@
     </ol>
   </aside>
 </div>
+
+<button class="side-btn" id="sideBtn" title="Mostrar/esconder QR Code (tecla Q)">◀ QR Code</button>
 
 <div class="spot" id="spot">
   <div class="spot-inner">
@@ -444,6 +452,18 @@
   }
 
   let rt; addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(render, 200); });
+
+  // Mostrar/esconder a lateral do QR Code (clique no botão da direita ou tecla Q). A escolha fica salva.
+  function setSide(hidden) {
+    $('app').classList.toggle('no-side', hidden);
+    $('sideBtn').textContent = hidden ? '◀ QR Code' : 'Esconder ▶';
+    try { localStorage.setItem('mural-sem-qr', hidden ? '1' : ''); } catch {}
+    clearTimeout(rt); rt = setTimeout(render, 480);
+  }
+  let startHidden = false; try { startHidden = localStorage.getItem('mural-sem-qr') === '1'; } catch {}
+  setSide(startHidden);
+  $('sideBtn').onclick = (e) => { e.stopPropagation(); setSide(!$('app').classList.contains('no-side')); };
+  addEventListener('keydown', (e) => { if (e.key === 'q' || e.key === 'Q') setSide(!$('app').classList.contains('no-side')); });
   const fs = () => (document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen()).catch(() => {});
   $('fs').onclick = fs;
   addEventListener('keydown', (e) => { if (e.key === 'f' || e.key === 'F') fs(); });
