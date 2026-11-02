@@ -94,6 +94,9 @@
   .wall { flex: 1; min-height: 0; display: grid; gap: 1.4vw; align-content: center; justify-content: center; }
   .card { position: relative; aspect-ratio: 2 / 3; border-radius: .9vw; overflow: hidden; background: color-mix(in srgb, var(--accent-deep) 35%, #000); box-shadow: 0 1.2vw 2.4vw -1vw #000c; transform: rotate(var(--rot, 0deg)); transition: transform .5s ease; }
   .card img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .card.video img { object-fit: contain; background: #000; }
+  .card .play { position: absolute; left: 50%; top: 50%; width: 3.6vw; height: 3.6vw; min-width: 34px; min-height: 34px; transform: translate(-50%, -50%); border-radius: 50%; background: #000000a0; border: 2px solid #fff; display: grid; place-items: center; }
+  .card .play::after { content: ''; margin-left: 12%; border-left: 1.1vw solid #fff; border-top: .7vw solid transparent; border-bottom: .7vw solid transparent; }
   .card .msg { position: absolute; left: 0; right: 0; bottom: 0; padding: 2.2em .7em .6em; font-size: clamp(10px, .85vw, 18px); font-weight: 600; line-height: 1.25; color: #fff; background: linear-gradient(transparent, #000c); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
   .card.enter { animation: cardIn .8s cubic-bezier(.2,1.3,.4,1) both; }
   .card.swap img { animation: swap .9s ease both; }
@@ -126,6 +129,8 @@
   .spot-inner { display: flex; align-items: center; gap: 4vw; }
   .spot img { height: 86vh; aspect-ratio: 2 / 3; border-radius: 1.4vw; box-shadow: 0 0 0 .5vw #fff, 0 3vw 8vw -2vw var(--accent); transform: scale(.6) rotate(-6deg); opacity: 0; transition: transform .8s cubic-bezier(.2,1.4,.4,1), opacity .5s; }
   .spot.on img { transform: none; opacity: 1; }
+  .spot img.is-video { aspect-ratio: 9 / 16; object-fit: cover; }
+  .spot video.tv { height: 86vh; aspect-ratio: 9 / 16; object-fit: cover; border-radius: 1.4vw; box-shadow: 0 0 0 .5vw #fff, 0 3vw 8vw -2vw var(--accent); background: #000; }
   .spot-text { max-width: 34vw; transform: translateX(4vw); opacity: 0; transition: all .7s .25s ease; }
   .spot.on .spot-text { transform: none; opacity: 1; }
   .spot-text small { display: inline-block; background: var(--accent); color: #fff; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; padding: .5vw 1.1vw; border-radius: 99px; font-size: clamp(12px, 1.1vw, 22px); }
@@ -140,6 +145,8 @@
   .showcase.on { opacity: 1; }
   .showcase img { height: min(78vh, 100%); aspect-ratio: 2 / 3; object-fit: cover; border-radius: 1.2vw; box-shadow: 0 0 0 .4vw #fff, 0 2.5vw 6vw -2vw var(--accent); transition: opacity .7s ease, transform .9s ease; }
   .showcase img.out { opacity: 0; transform: scale(.94) rotate(-2deg); }
+  .showcase img.is-video { aspect-ratio: 9 / 16; }
+  .showcase video.tv { height: min(78vh, 100%); aspect-ratio: 9 / 16; object-fit: cover; border-radius: 1.2vw; box-shadow: 0 0 0 .4vw #fff, 0 2.5vw 6vw -2vw var(--accent); background: #000; }
   .show-text { max-width: 30vw; transition: opacity .7s ease; }
   .show-text.out { opacity: 0; }
   .show-text small { display: inline-block; background: #ffffff1a; color: var(--accent-2); font-weight: 800; letter-spacing: .14em; text-transform: uppercase; padding: .5vw 1.1vw; border-radius: 99px; font-size: clamp(12px, 1vw, 20px); }
@@ -281,14 +288,17 @@
   }
 
   const rot = () => `${(Math.random() * 5 - 2.5).toFixed(2)}deg`;
+  const isVid = (p) => p && p.type === 'video';
+  const imgUrl = (p) => (isVid(p) ? p.poster : p.url);
 
   function cardEl(p, cls) {
     const d = document.createElement('div');
     d.className = 'card ' + (cls || '');
     d.dataset.id = p.id;
     d.style.setProperty('--rot', rot());
-    const img = new Image(); img.src = p.url; img.alt = p.name || 'Participante';
+    const img = new Image(); img.src = imgUrl(p); img.alt = p.name || 'Participante';
     d.appendChild(img);
+    if (isVid(p)) { d.classList.add('video'); const pl = document.createElement('div'); pl.className = 'play'; d.appendChild(pl); }
     if (p.message) { const m = document.createElement('div'); m.className = 'msg'; m.textContent = `“${p.message}”`; d.appendChild(m); }
     return d;
   }
@@ -329,9 +339,41 @@
     img.onload = () => {
       card.classList.remove('swap'); void card.offsetWidth; card.classList.add('swap');
       card.replaceChildren(...cardEl(p).childNodes); card.dataset.id = p.id; shown[idx] = p.id;
+      card.classList.toggle('video', isVid(p));
     };
-    img.src = p.url; img.alt = p.name || 'Participante';
+    img.src = imgUrl(p); img.alt = p.name || 'Participante';
   }, 5000);
+
+  // ---------- Player único de vídeo (reaproveitado; libera memória ao terminar) ----------
+  const VCFG = Object.assign({ somNoTelao: true }, P.video || {});
+  let soundOn = false;
+  const player = document.createElement('video');
+  player.className = 'tv'; player.playsInline = true; player.setAttribute('playsinline', ''); player.preload = 'auto';
+  let vDone = null, vTimer = null, vImg = null;
+  function stopVideo() {
+    clearTimeout(vTimer);
+    player.onended = player.onerror = player.onplaying = null;
+    try { player.pause(); } catch {}
+    player.removeAttribute('src'); player.load();
+    if (player.parentNode) player.remove();
+    if (vImg) { vImg.style.display = ''; vImg = null; }
+    const cb = vDone; vDone = null; return cb;
+  }
+  // Toca o vídeo no lugar da imagem "img"; chama onEnd ao terminar, falhar ou travar
+  function playVideo(img, p, onEnd) {
+    stopVideo();
+    vDone = onEnd; vImg = img;
+    const finish = () => { const cb = stopVideo(); if (cb) cb(); };
+    player.muted = !(VCFG.somNoTelao && soundOn);
+    player.src = p.url;
+    img.insertAdjacentElement('afterend', player);
+    img.style.display = 'none';
+    player.onended = finish;
+    player.onerror = finish;
+    // trava de segurança: duração + folga, no máximo 25 s
+    vTimer = setTimeout(finish, Math.min(25, (Number(p.duration) || 15) + 6) * 1000);
+    player.play().catch(() => { player.muted = true; player.play().catch(finish); });
+  }
 
   // Destaque de nova foto
   function spotlight(p) {
@@ -347,16 +389,20 @@
     img.onload = () => {
       $('spotName').innerHTML = p.name ? `Olá, <span>${escapeHtml(p.name)}</span>!` : 'Mais um <span>participante!</span>';
       $('spotMsg').textContent = p.message ? `“${p.message}”` : '';
+      $('spot').querySelector('small').textContent = isVid(p) ? 'Novo vídeo no mural' : 'Nova foto no mural';
+      img.classList.toggle('is-video', isVid(p));
       $('spot').classList.add('on');
       celebrate();
-      setTimeout(() => {
+      const close = () => {
         $('spot').classList.remove('on');
         addToWall(p);
         setTimeout(nextSpot, 900);
-      }, p.message ? 8000 : 6000);
+      };
+      if (isVid(p)) setTimeout(() => playVideo(img, p, close), 1200);
+      else setTimeout(close, p.message ? 8000 : 6000);
     };
     img.onerror = () => { addToWall(p); nextSpot(); };
-    img.src = p.url;
+    img.src = imgUrl(p);
   }
   const escapeHtml = (s) => s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
@@ -446,7 +492,7 @@
     }
     return { enable, fanfare, pop };
   })();
-  function unlockSound() { sfx.enable(); $('soundBtn').classList.add('hide'); sfx.fanfare(); }
+  function unlockSound() { sfx.enable(); soundOn = true; $('soundBtn').classList.add('hide'); sfx.fanfare(); }
   $('soundBtn').onclick = (e) => { e.stopPropagation(); unlockSound(); };
   addEventListener('keydown', (e) => { if (e.key !== 'f' && e.key !== 'F' && !$('soundBtn').classList.contains('hide')) unlockSound(); });
 
@@ -487,7 +533,8 @@
       const pre = new Image();
       pre.onload = () => {
         if (!showing) return;
-        img.src = p.url;
+        img.src = imgUrl(p);
+        img.classList.toggle('is-video', isVid(p));
         if (p.art) {
           $('showText').querySelector('small').textContent = `✦ ${p.kicker} ✦`;
           $('showName').innerHTML = `<span>${escapeHtml(p.title)}</span>`;
@@ -499,13 +546,17 @@
         }
         $('showcase').classList.add('on');
         img.classList.remove('out'); txt.classList.remove('out');
-        showT = setTimeout(() => nextShow(false), EACH);
+        if (isVid(p)) {
+          $('showText').querySelector('small').textContent = 'Vídeo 🎬';
+          showT = setTimeout(() => playVideo(img, p, () => { if (showing) nextShow(false); }), 600);
+        } else showT = setTimeout(() => nextShow(false), EACH);
       };
       pre.onerror = () => { showT = setTimeout(() => nextShow(false), 500); };
-      pre.src = p.url;
+      pre.src = imgUrl(p);
     }, first ? 0 : 700);
   }
   function stopShowcase() {
+    if (vImg === $('showImg')) stopVideo();
     showing = false; clearTimeout(showT); clearTimeout(idleT);
     $('showcase').classList.remove('on');
   }
@@ -538,10 +589,10 @@
     es.addEventListener('remove', (e) => {
       const { id } = JSON.parse(e.data);
       photos = photos.filter((p) => p.id !== id);
-      if (lastShown === id && showing) { clearTimeout(showT); nextShow(false); }
+      if (lastShown === id && showing) { if (vImg === $('showImg')) stopVideo(); clearTimeout(showT); nextShow(false); }
       render();
     });
-    es.addEventListener('reset', () => { photos = []; stopShowcase(); render(); });
+    es.addEventListener('reset', () => { photos = []; stopShowcase(); stopVideo(); render(); });
   }
 
   let rt; addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(render, 200); });

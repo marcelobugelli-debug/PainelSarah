@@ -67,6 +67,14 @@ window.PAINEL = {
   // Figurinhas que o convidado pode colocar na foto
   figurinhas: ['🎤', '🎧', '💖', '✨', '⭐', '🎀', '💜', '🩷', '🎶', '💫', '👑', '😎', '🔥', '🦄', '🌈', '🎂', '🥳', '🐱'],
 
+  // Vídeos dos convidados
+  video: {
+    texto: 'Sarah faz 11 anos', // inscrição da moldura do vídeo
+    maxSegundos: 15,            // duração máxima
+    maxMB: 15,                  // tamanho máximo do arquivo
+    somNoTelao: true,           // toca com som no telão depois de clicar em "ativar o som"
+  },
+
   // Vitrine no telão: depois de quantos segundos sem foto nova começa a passar as antigas,
   // e quanto tempo cada uma fica. Use 0 em carrosselEsperaSegundos para desligar.
   carrosselEsperaSegundos: 20,

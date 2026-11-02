@@ -94,6 +94,33 @@
   .btn[disabled] { opacity: .6; pointer-events: none; }
   .btn svg { width: 22px; height: 22px; }
   .cta-big { font-family: 'Anton', sans-serif; font-weight: 400; font-size: clamp(17px, 5.4vw, 22px); letter-spacing: .08em; padding: 17px 18px; white-space: nowrap; }
+  /* Escolha foto/vídeo */
+  .modo { display: none; gap: 6px; padding: 4px; border-radius: 999px; background: #0A0612; border: 1px solid var(--line); }
+  .modo.on { display: flex; }
+  .modo button { flex: 1; border: 0; border-radius: 999px; padding: 10px 8px; background: transparent; color: var(--muted); font: inherit; font-weight: 800; font-size: 15px; cursor: pointer; }
+  .modo button.sel { background: color-mix(in srgb, var(--accent) 85%, #000); color: #fff; box-shadow: 0 0 18px -4px var(--accent); }
+
+  /* Vídeo */
+  #vrec { background: #000; padding-left: 0; padding-right: 0; height: 100dvh; min-height: 0; overflow: hidden; padding-top: max(12px, env(safe-area-inset-top)); padding-bottom: max(12px, env(safe-area-inset-bottom)); }
+  .vstage { position: relative; height: min(100%, calc((100vw - 24px) * 1.7778)); aspect-ratio: 9 / 16; flex: none; border-radius: 18px; overflow: hidden; background: #000; box-shadow: 0 0 0 1px #ffffff1a; }
+  .vstage canvas { width: 100%; height: 100%; display: block; }
+  .vcount { position: absolute; top: 14px; left: 50%; transform: translateX(-50%); display: none; align-items: center; gap: 8px; padding: 6px 14px; border-radius: 999px; background: #000000a8; color: #fff; font-family: 'Anton', sans-serif; font-size: 26px; letter-spacing: .04em; font-variant-numeric: tabular-nums; }
+  .vcount.on { display: flex; }
+  .vcount i { width: 12px; height: 12px; border-radius: 50%; background: #FF3B3B; animation: blink 1s infinite; }
+  @keyframes blink { 50% { opacity: .25; } }
+  .vbig { position: absolute; inset: 0; display: grid; place-items: center; font-family: 'Anton', sans-serif; font-size: 150px; color: #fff; text-shadow: 0 0 30px var(--accent); pointer-events: none; }
+  .vbig:empty { display: none; }
+  .vrecbtn { width: 78px; height: 78px; border-radius: 50%; border: 5px solid #fff; background: transparent; cursor: pointer; display: grid; place-items: center; position: relative; }
+  .vrecbtn::after { content: ''; width: 58px; height: 58px; border-radius: 50%; background: #FF3B3B; transition: all .2s; }
+  .vrecbtn.rec::after { width: 28px; height: 28px; border-radius: 6px; }
+  .vrecbtn svg { position: absolute; inset: -9px; width: calc(100% + 18px); height: calc(100% + 18px); transform: rotate(-90deg); pointer-events: none; }
+  .vrecbtn circle { fill: none; stroke: var(--accent); stroke-width: 4; stroke-linecap: round; transition: stroke-dashoffset .1s linear; }
+  .vplayer { width: min(100%, calc(56dvh * .5625)); aspect-ratio: 9 / 16; margin: 0 auto; border-radius: 16px; background: #000; display: block; object-fit: cover; box-shadow: 0 0 0 1px #ffffff1a; }
+  .vinfo { text-align: center; color: var(--muted); font-size: 13px; }
+  .vbar { height: 8px; border-radius: 99px; background: #ffffff1a; overflow: hidden; display: none; }
+  .vbar.on { display: block; }
+  .vbar i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--accent), var(--accent-2)); transition: width .2s; }
+
   @media (max-height: 740px) {
     #welcome .hero { gap: 9px; margin: 4px 0; }
     .disco { width: 70px; height: 86px; }
@@ -210,6 +237,10 @@
       <label class="field">Seu nome no telão
         <input type="text" id="name" maxlength="40" placeholder="Como quer aparecer?" autocomplete="given-name">
       </label>
+      <div class="modo" id="modo" role="tablist">
+        <button class="sel" data-modo="foto" type="button">📸 Foto</button>
+        <button data-modo="video" type="button">🎬 Vídeo</button>
+      </div>
       <button class="btn btn-primary cta-big" id="start">Bora tirar a foto ✦</button>
     </div>
     <div class="error" id="err1"></div>
@@ -217,6 +248,55 @@
 
   <div class="ticker alt"><div class="ticker-track" id="tick2"></div></div>
   <p class="foot-note">foto · moldura · recado · telão</p>
+</section>
+
+<!-- V1. Gravação de vídeo -->
+<section class="screen" id="vrec">
+  <div class="top-row">
+    <div class="brand"><i></i> <span data-cfg="nome">Mural de Fotos</span></div>
+    <span class="link-btn" style="border:0;background:transparent">Vídeo de até <b id="vmax">15</b>s</span>
+  </div>
+  <div class="stage-box"><div class="vstage">
+    <canvas id="vcanvas"></canvas>
+    <div class="vcount" id="vcount"><i></i><span id="vleft">15</span></div>
+    <div class="vbig" id="vbig"></div>
+  </div></div>
+  <div class="fx-status" id="vstatus">Toque no botão vermelho para gravar</div>
+  <div class="controls">
+    <button class="round" id="vback" aria-label="Voltar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+    <button class="vrecbtn" id="vrecbtn" aria-label="Gravar"><svg viewBox="0 0 100 100"><circle id="vring" cx="50" cy="50" r="47" stroke-dasharray="295.3" stroke-dashoffset="295.3"/></svg></button>
+    <button class="round" id="vflip" aria-label="Trocar câmera"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><path d="M9 13a3 3 0 0 1 5.2-2"/><path d="M15 13a3 3 0 0 1-5.2 2"/><path d="M14.5 8.8V11H12.3"/><path d="M9.5 17.2V15h2.2"/></svg></button>
+  </div>
+</section>
+
+<!-- V2. Revisão do vídeo -->
+<section class="screen" id="vreview">
+  <div class="brand"><i></i> <span data-cfg="nome">Mural de Fotos</span></div>
+  <div class="result">
+    <video class="vplayer" id="vplayer" playsinline controls preload="metadata"></video>
+    <div class="vinfo" id="vinfo"></div>
+    <div class="vbar" id="vbar"><i id="vbarfill"></i></div>
+    <div class="error" id="verr"></div>
+    <div class="sticky-actions">
+      <button class="btn btn-primary" id="vsend">Enviar ao telão</button>
+      <div class="row">
+        <button class="btn btn-ghost" id="vretake">Gravar de novo</button>
+        <button class="btn btn-ghost" id="vdiscard">Descartar</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- V3. Vídeo enviado -->
+<section class="screen" id="vdone">
+  <div class="brand"><i></i> <span data-cfg="nome">Mural de Fotos</span></div>
+  <div class="result" style="justify-content:center">
+    <div class="check"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>
+    <h2>Vídeo enviado! 🎬</h2>
+    <p>Ele vai aparecer no telão da festa. 💖</p>
+    <button class="btn btn-primary" id="vagain">Gravar outro vídeo</button>
+    <button class="btn btn-ghost" id="vhome">Voltar ao início</button>
+  </div>
 </section>
 
 <!-- 2. Moldura -->
@@ -304,6 +384,7 @@
 <script src="/frame.js"></script>
 <script src="/acessorios.js"></script>
 <script src="/ar.js"></script>
+<script src="/video.js"></script>
 <script>
 (() => {
   const $ = (id) => document.getElementById(id);
@@ -521,8 +602,88 @@
     show('review');
   }
 
+  // ---------- Vídeo ----------
+  let modo = 'foto', grav = null, gravado = null, gravadoUrl = '';
+  if (window.Video && Video.suportado()) {
+    $('modo').classList.add('on');
+    $('vmax').textContent = Video.CFG.maxSegundos;
+    $('modo').querySelectorAll('button').forEach((b) => b.onclick = () => {
+      modo = b.dataset.modo;
+      $('modo').querySelectorAll('button').forEach((x) => x.classList.toggle('sel', x === b));
+      $('start').textContent = modo === 'video' ? 'Bora gravar o vídeo ✦' : 'Bora tirar a foto ✦';
+    });
+  }
+  const ringLen = 295.3;
+  function resetRec() {
+    $('vrecbtn').classList.remove('rec'); $('vcount').classList.remove('on'); $('vbig').textContent = '';
+    $('vring').style.strokeDashoffset = ringLen; $('vleft').textContent = Video.CFG.maxSegundos;
+    $('vstatus').textContent = 'Toque no botão vermelho para gravar';
+  }
+  function limparGravado() { if (gravadoUrl) URL.revokeObjectURL(gravadoUrl); gravadoUrl = ''; gravado = null; $('vplayer').removeAttribute('src'); $('vplayer').load(); }
+  async function abrirVideo() {
+    stopCamera();
+    limparGravado();
+    if (!grav) grav = Video.criar($('vcanvas'));
+    resetRec();
+    show('vrec');
+    try {
+      const { comAudio } = await grav.abrir();
+      if (!comAudio) $('vstatus').textContent = 'Microfone bloqueado: o vídeo será gravado sem som.';
+    } catch (e) {
+      console.warn('vídeo', e); show('welcome');
+      showErr($('err1'), 'Não conseguimos abrir a câmera para o vídeo. Libere câmera e microfone para este site e tente de novo.');
+    }
+  }
+  let contando = false;
+  $('vrecbtn').onclick = async () => {
+    if (contando) return;
+    if (grav.gravando()) { grav.parar(); return; }
+    // contagem 3-2-1 antes de começar
+    contando = true; $('vstatus').textContent = 'Prepare-se…';
+    for (const n of [3, 2, 1]) { $('vbig').textContent = n; await new Promise((r) => setTimeout(r, 800)); }
+    $('vbig').textContent = ''; contando = false;
+    $('vrecbtn').classList.add('rec'); $('vcount').classList.add('on');
+    $('vstatus').textContent = 'Gravando… toque de novo para parar';
+    grav.gravar((resta, passou) => {
+      $('vleft').textContent = Math.ceil(resta);
+      $('vring').style.strokeDashoffset = ringLen * (1 - Math.min(1, passou / Video.CFG.maxSegundos));
+    }, (res) => {
+      grav.fechar(); resetRec();
+      gravado = res; gravadoUrl = URL.createObjectURL(res.blob);
+      const mb = res.blob.size / 1048576;
+      $('vplayer').src = gravadoUrl;
+      $('vinfo').textContent = `${Math.round(res.dur)} s · ${mb.toFixed(1).replace('.', ',')} MB`;
+      $('vbar').classList.remove('on'); $('vbarfill').style.width = '0';
+      showErr($('verr'), res.blob.size > Video.limiteBytes ? `O vídeo ficou com ${mb.toFixed(1).replace('.', ',')} MB e o limite é ${Video.CFG.maxMB} MB. Grave de novo um pouco mais curto.` : '');
+      $('vsend').disabled = res.blob.size > Video.limiteBytes || res.blob.size < 1000;
+      show('vreview');
+    });
+  };
+  $('vflip').onclick = async () => {
+    if (grav.gravando() || contando) return;
+    const lado = grav.lado() === 'user' ? 'environment' : 'user';
+    try { await grav.abrir(lado); } catch { await grav.abrir('user').catch(() => {}); }
+  };
+  $('vback').onclick = () => { if (grav) grav.fechar(); contando = false; show('welcome'); };
+  $('vretake').onclick = () => abrirVideo();
+  $('vdiscard').onclick = () => { limparGravado(); show('welcome'); };
+  $('vsend').onclick = async () => {
+    if (!gravado) return;
+    const btn = $('vsend'); btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Enviando…';
+    $('vbar').classList.add('on'); showErr($('verr'), '');
+    try {
+      await Video.enviar({ blob: gravado.blob, poster: gravado.poster, dur: gravado.dur, nome: getName() }, (f) => { $('vbarfill').style.width = Math.round(f * 100) + '%'; });
+      limparGravado(); show('vdone');
+    } catch (e) {
+      showErr($('verr'), `Ops! Não conseguimos enviar (${e.message}). Verifique a conexão e tente de novo.`);
+    } finally { btn.disabled = false; btn.textContent = 'Enviar ao telão'; }
+  };
+  $('vagain').onclick = () => abrirVideo();
+  $('vhome').onclick = () => show('welcome');
+
   // ---------- Fluxo ----------
   $('start').onclick = async () => {
+    if (modo === 'video') { try { localStorage.setItem('mural-name', getName()); } catch {} showErr($('err1'), ''); return abrirVideo(); }
     try { localStorage.setItem('mural-name', getName()); } catch {}
     const btn = $('start'), txt = btn.textContent; btn.disabled = true; btn.textContent = 'Carregando…';
     await F.ready; btn.disabled = false; btn.textContent = txt;

@@ -52,6 +52,10 @@
   @keyframes in { from { opacity: 0; transform: translateY(8px); } }
   .item.fresh { box-shadow: 0 0 0 3px var(--accent), 0 10px 26px -16px color-mix(in srgb, var(--accent-deep) 53%, transparent); }
   .item img { width: 100%; aspect-ratio: 2 / 3; object-fit: cover; display: block; cursor: zoom-in; background: var(--tint-1); }
+  .item .thumb { position: relative; }
+  .item .thumb.is-video img { object-fit: contain; background: #000; }
+  .vbadge { position: absolute; left: 10px; top: 10px; background: #000000b0; color: #fff; font-size: 12px; font-weight: 800; padding: 4px 10px; border-radius: 99px; pointer-events: none; }
+  .sheet video { width: 100%; max-height: 60vh; border-radius: 14px; background: #000; }
   .meta { padding: 10px 12px 12px; display: flex; align-items: center; gap: 8px; }
   .meta div { min-width: 0; flex: 1; }
   .meta strong { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -112,6 +116,7 @@
 <div class="modal" id="modal">
   <div class="sheet">
     <img id="mImg" alt="">
+    <video id="mVid" controls playsinline preload="metadata" style="display:none"></video>
     <h2 id="mTitle">Remover esta foto?</h2>
     <p>Ela sai do telão na hora. Essa ação não pode ser desfeita.</p>
     <div class="row">
@@ -180,7 +185,8 @@
     const el = document.createElement('div');
     el.className = 'item' + (fresh ? ' fresh' : '');
     el.dataset.id = p.id;
-    el.innerHTML = `<img src="${p.url}" alt="" loading="lazy">
+    const vid = p.type === 'video';
+    el.innerHTML = `<div class="thumb${vid ? ' is-video' : ''}"><img src="${vid ? p.poster : p.url}" alt="" loading="lazy">${vid ? '<span class="vbadge">▶ vídeo</span>' : ''}</div>
       ${p.message ? `<div class="note" style="margin-top:10px">“${esc(p.message)}”</div>` : ''}
       <div class="meta"><div><strong>${p.name ? esc(p.name) : 'Sem nome'}</strong><span>${when(p.createdAt)}</span></div>
       <button class="del" title="Remover foto" aria-label="Remover foto"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16"/><path d="M10 11v6M14 11v6"/><path d="M6 7l1 13h10l1-13"/><path d="M9 7V4h6v3"/></svg></button></div>`;
@@ -199,11 +205,16 @@
 
   function ask(p) {
     pending = p;
-    $('mImg').src = p.url;
-    $('mTitle').textContent = p.name ? `Remover a foto de ${p.name}?` : 'Remover esta foto?';
+    const vid = p.type === 'video';
+    $('mImg').style.display = vid ? 'none' : '';
+    $('mVid').style.display = vid ? '' : 'none';
+    if (vid) { $('mVid').src = p.url; } else { $('mImg').src = p.url; stopMVid(); }
+    const tipo = p.type === 'video' ? 'o vídeo' : 'a foto';
+    $('mTitle').textContent = p.name ? `Remover ${tipo} de ${p.name}?` : `Remover ${p.type === 'video' ? 'este vídeo' : 'esta foto'}?`;
     $('modal').classList.add('on');
   }
-  const close = () => { $('modal').classList.remove('on'); pending = null; };
+  function stopMVid() { const v = $('mVid'); try { v.pause(); } catch {} v.removeAttribute('src'); v.load(); }
+  const close = () => { $('modal').classList.remove('on'); pending = null; stopMVid(); };
   $('mCancel').onclick = close;
   $('modal').onclick = (e) => { if (e.target === $('modal')) close(); };
   addEventListener('keydown', (e) => { if (e.key === 'Escape') { close(); closeWipe(); } });

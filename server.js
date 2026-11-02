@@ -13,11 +13,14 @@ const PUBLIC_DIR = path.join(__dirname, 'public');
 const DATA_DIR = path.join(__dirname, 'data');
 const PHOTO_DIR = path.join(DATA_DIR, 'photos');
 const RAW_DIR = path.join(DATA_DIR, 'originais');
+const VIDEO_DIR = path.join(DATA_DIR, 'videos');
+const MAX_VIDEO = 15 * 1024 * 1024;
 const DB_FILE = path.join(DATA_DIR, 'photos.json');
 const MAX_BODY = 24 * 1024 * 1024;
 
 fs.mkdirSync(PHOTO_DIR, { recursive: true });
 fs.mkdirSync(RAW_DIR, { recursive: true });
+fs.mkdirSync(VIDEO_DIR, { recursive: true });
 let photos = [];
 try { photos = JSON.parse(fs.readFileSync(DB_FILE, 'utf8')); } catch { photos = []; }
 const saveDb = () => fs.writeFileSync(DB_FILE, JSON.stringify(photos, null, 2));
@@ -42,6 +45,7 @@ const MIME = {
   '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8',
   '.css': 'text/css; charset=utf-8', '.svg': 'image/svg+xml', '.jpg': 'image/jpeg',
   '.png': 'image/png', '.json': 'application/json', '.ico': 'image/x-icon',
+  '.webp': 'image/webp', '.woff2': 'font/woff2', '.mp4': 'video/mp4', '.webm': 'video/webm',
 };
 
 function sendJson(res, status, body) {
@@ -60,6 +64,47 @@ function serveFile(res, file, cache) {
     fs.createReadStream(file).pipe(res);
   });
 }
+
+// Entrega com suporte a partes (Range): necessário para tocar vídeo no iPhone e para avançar o vídeo
+function serveRange(req, res, file) {
+  fs.stat(file, (err, st) => {
+    if (err || !st.isFile()) { res.writeHead(404); return res.end('Não encontrado'); }
+    const type = MIME[path.extname(file).toLowerCase()] || 'application/octet-stream';
+    const base = { 'Content-Type': type, 'Accept-Ranges': 'bytes', 'Cache-Control': 'public, max-age=31536000, immutable' };
+    const m = /^bytes=(\d*)-(\d*)$/.exec(req.headers.range || '');
+    if (!m) { res.writeHead(200, { ...base, 'Content-Length': st.size }); return fs.createReadStream(file).pipe(res); }
+    let start = m[1] === '' ? st.size - Number(m[2]) : Number(m[1]);
+    let end = m[1] !== '' && m[2] !== '' ? Number(m[2]) : st.size - 1;
+    if (isNaN(start) || start < 0 || start >= st.size || end < start) { res.writeHead(416, { 'Content-Range': `bytes */${st.size}` }); return res.end(); }
+    end = Math.min(end, st.size - 1);
+    res.writeHead(206, { ...base, 'Content-Length': end - start + 1, 'Content-Range': `bytes ${start}-${end}/${st.size}` });
+    fs.createReadStream(file, { start, end }).pipe(res);
+  });
+}
+
+// Recebe o vídeo direto no disco, aos pedaços (não ocupa memória), com limite de tamanho
+function receiveToFile(req, file, max) {
+  return new Promise((resolve, reject) => {
+    let size = 0, failed = false;
+    const out = fs.createWriteStream(file);
+    const fail = (e) => { if (failed) return; failed = true; out.destroy(); fs.rm(file, () => {}); req.resume(); reject(e); };
+    req.on('data', (c) => { size += c.length; if (size > max) fail(new Error('too_large')); });
+    req.on('error', fail);
+    out.on('error', fail);
+    out.on('finish', () => { if (!failed) resolve(size); });
+    req.pipe(out);
+  });
+}
+const isVideoFile = (buf) => (buf.length >= 12 && buf.toString('latin1', 4, 8) === 'ftyp') || (buf.length >= 4 && buf.readUInt32BE(0) === 0x1A45DFA3);
+const removeEntryFiles = (e) => {
+  if (e.type === 'video') {
+    fs.rm(path.join(VIDEO_DIR, path.basename(e.url)), () => {});
+    if (e.poster) fs.rm(path.join(VIDEO_DIR, path.basename(e.poster)), () => {});
+  } else {
+    fs.rm(path.join(PHOTO_DIR, `${e.id}.jpg`), () => {});
+    fs.rm(path.join(RAW_DIR, `${e.id}.jpg`), () => {});
+  }
+};
 
 function readBody(req) {
   return new Promise((resolve, reject) => {
@@ -150,6 +195,45 @@ const server = http.createServer(async (req, res) => {
     }
   }
 
+  // ---- Vídeos: 1) capa (JPEG pequeno) cria o id; 2) o vídeo em binário finaliza e aparece no telão ----
+  if (p === '/api/videos/poster' && req.method === 'POST') {
+    try {
+      const { image } = JSON.parse(await readBody(req));
+      const img = jpeg(image);
+      if (!img || img.length > 1024 * 1024) return sendJson(res, 400, { error: 'Capa inválida' });
+      const id = 'v' + Date.now().toString(36) + crypto.randomBytes(3).toString('hex');
+      fs.writeFileSync(path.join(VIDEO_DIR, `${id}.jpg`), img);
+      return sendJson(res, 201, { id });
+    } catch { return sendJson(res, 400, { error: 'Falha ao enviar a capa' }); }
+  }
+  if (p === '/api/videos' && req.method === 'POST') {
+    const id = String(url.searchParams.get('id') || '');
+    if (!/^v[a-z0-9]+$/.test(id) || !fs.existsSync(path.join(VIDEO_DIR, `${id}.jpg`)) || photos.some((x) => x.id === id)) {
+      req.resume(); return sendJson(res, 400, { error: 'Envio inválido' });
+    }
+    const declared = Number(req.headers['content-length'] || 0);
+    if (declared > MAX_VIDEO) { req.resume(); return sendJson(res, 413, { error: 'Vídeo maior que 15 MB' }); }
+    const ctype = String(req.headers['content-type'] || '');
+    const ext = /mp4|quicktime/.test(ctype) ? 'mp4' : /webm/.test(ctype) ? 'webm' : '';
+    if (!ext) { req.resume(); return sendJson(res, 415, { error: 'Formato de vídeo não suportado' }); }
+    const file = path.join(VIDEO_DIR, `${id}.${ext}`);
+    try {
+      const size = await receiveToFile(req, file, MAX_VIDEO);
+      const head = Buffer.alloc(12); const fd = fs.openSync(file, 'r'); fs.readSync(fd, head, 0, 12, 0); fs.closeSync(fd);
+      if (size < 1000 || !isVideoFile(head)) { fs.rm(file, () => {}); return sendJson(res, 400, { error: 'Arquivo de vídeo inválido' }); }
+      const video = {
+        id, type: 'video', name: cleanName(url.searchParams.get('name')), message: '',
+        url: `/videos/${id}.${ext}`, poster: `/videos/${id}.jpg`, mime: ctype.split(';')[0], size,
+        duration: Math.min(16, Number(url.searchParams.get('dur')) || 15), createdAt: new Date().toISOString(),
+      };
+      photos.push(video); saveDb();
+      broadcast('photo', video);
+      return sendJson(res, 201, video);
+    } catch (e) {
+      return sendJson(res, e.message === 'too_large' ? 413 : 400, { error: e.message === 'too_large' ? 'Vídeo maior que 15 MB' : 'Falha ao enviar o vídeo' });
+    }
+  }
+
   // Moderação (senha no cabeçalho X-Admin-Key)
   if (p === '/api/admin/login' && req.method === 'POST') {
     if (!ADMIN_KEY) return sendJson(res, 503, { error: 'ADMIN_KEY não configurada no servidor' });
@@ -158,12 +242,11 @@ const server = http.createServer(async (req, res) => {
   const del = /^\/api\/photos\/([a-z0-9]+)$/.exec(p);
   if (del && req.method === 'DELETE') {
     if (!isAdmin(req)) return sendJson(res, 403, { error: 'Sem permissão' });
-    const before = photos.length;
+    const found = photos.find((x) => x.id === del[1]);
+    if (!found) return sendJson(res, 404, { error: 'Não encontrada' });
     photos = photos.filter((x) => x.id !== del[1]);
-    if (photos.length === before) return sendJson(res, 404, { error: 'Não encontrada' });
     saveDb();
-    fs.rm(path.join(PHOTO_DIR, `${del[1]}.jpg`), () => {});
-    fs.rm(path.join(RAW_DIR, `${del[1]}.jpg`), () => {});
+    removeEntryFiles(found);
     broadcast('remove', { id: del[1] });
     return sendJson(res, 200, { ok: true });
   }
@@ -179,6 +262,13 @@ const server = http.createServer(async (req, res) => {
     let txt = '';
     photos.forEach((ph, i) => {
       const base = fileBase(ph, i);
+      if (ph.type === 'video') {
+        const vname = `videos/${base}${path.extname(ph.url)}`;
+        entries.push({ name: vname, file: path.join(VIDEO_DIR, path.basename(ph.url)) });
+        const whenV = new Date(ph.createdAt).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+        rows.push([i + 1, ph.name, '', whenV, vname, ''].map(csvCell).join(';'));
+        return;
+      }
       entries.push({ name: `com-moldura/${base}.jpg`, file: path.join(PHOTO_DIR, `${ph.id}.jpg`) });
       if (ph.hasRaw) entries.push({ name: `sem-moldura/${base}.jpg`, file: path.join(RAW_DIR, `${ph.id}.jpg`) });
       const when = new Date(ph.createdAt).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
@@ -194,10 +284,9 @@ const server = http.createServer(async (req, res) => {
   if (p === '/api/admin/all' && req.method === 'DELETE') {
     if (!isAdmin(req)) return sendJson(res, 403, { error: 'Sem permissão' });
     const n = photos.length;
-    for (const ph of photos) {
-      fs.rm(path.join(PHOTO_DIR, `${ph.id}.jpg`), () => {});
-      fs.rm(path.join(RAW_DIR, `${ph.id}.jpg`), () => {});
-    }
+    for (const ph of photos) removeEntryFiles(ph);
+    // capas de envios que não terminaram
+    fs.readdir(VIDEO_DIR, (err, list) => { if (!err) list.forEach((f) => fs.rm(path.join(VIDEO_DIR, f), () => {})); });
     photos = []; saveDb();
     broadcast('reset', {});
     return sendJson(res, 200, { ok: true, removed: n });
@@ -212,6 +301,7 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
+  if (p.startsWith('/videos/')) return serveRange(req, res, path.join(VIDEO_DIR, path.basename(p)));
   if (p.startsWith('/photos/')) {
     const file = path.join(PHOTO_DIR, path.basename(p));
     return serveFile(res, file, 'public, max-age=31536000, immutable');
