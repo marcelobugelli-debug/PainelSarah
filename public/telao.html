@@ -50,6 +50,12 @@
   .logo svg { width: 84%; }
   .disco { width: 6.2vw; min-width: 64px; flex: none; margin-top: -2vw; transform-origin: 50% 0; animation: swing 4s ease-in-out infinite; filter: drop-shadow(0 0 2vw color-mix(in srgb, var(--accent-2) 70%, transparent)); }
   .disco svg { width: 100%; display: block; }
+  .disco.avatar { width: 7.4vw; height: 7.4vw; min-width: 76px; min-height: 76px; margin-top: 0; border-radius: 50%; padding: .32vw; background: conic-gradient(from 200deg, var(--accent), var(--accent-2), #fff, var(--accent)); animation: none; box-shadow: 0 0 2.6vw -.3vw var(--accent); }
+  .disco.avatar img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; display: block; border: .3vw solid var(--bg); }
+  .empty { display: flex; align-items: center; justify-content: center; gap: 4vw; text-align: left !important; }
+  .empty .art { height: min(62vh, 40vw); aspect-ratio: 4 / 5; object-fit: cover; border-radius: 1.2vw; box-shadow: 0 0 0 .45vw #fff, 0 2.5vw 6vw -1.5vw var(--accent); transform: rotate(-3deg); }
+  .empty .copy { max-width: 32vw; }
+  .empty .copy small { display: inline-block; color: var(--accent-2); font-weight: 800; letter-spacing: .28em; text-transform: uppercase; font-size: clamp(12px, .95vw, 20px); }
   @keyframes swing { 50% { transform: rotate(6deg); } }
   h1 { margin: 0; line-height: .9; display: flex; align-items: baseline; gap: 1.2vw; flex-wrap: wrap; font-weight: 400; }
   h1 .name { font-family: 'Anton', sans-serif; font-size: clamp(54px, 6.4vw, 150px); letter-spacing: .02em; text-transform: uppercase; color: transparent; -webkit-text-stroke: .16vw #fff; text-shadow: 0 0 2.4vw color-mix(in srgb, var(--accent) 55%, transparent); position: relative; }
@@ -206,7 +212,9 @@
   const robot = window.PainelFrame.logoSVG();
   $('logo').innerHTML = robot;
   const P = window.PAINEL;
-  $('disco').innerHTML = window.PainelFrame.discoSVG();
+  const ARTES = P.artes || {};
+  if (ARTES.avatar) { $('disco').innerHTML = `<img src="${ARTES.avatar}" alt="">`; $('disco').classList.add('avatar'); }
+  else $('disco').innerHTML = window.PainelFrame.discoSVG();
   $('wallName').textContent = (P.aniversariante || P.nome); $('wallName').dataset.txt = $('wallName').textContent;
   if (P.idade) $('wallAge').textContent = P.idade; else document.querySelector('h1 .age').style.display = 'none';
   $('ticker').textContent = ([`${(P.aniversariante || '').toUpperCase()} FAZ ${P.idade || ''}`, 'POP STAR PARTY', 'ESCANEIE O QR CODE', 'TIRE SUA FOTO', 'DEIXE UM RECADO', 'APAREÇA NO TELÃO'].join(' ✦ ') + ' ✦ ').repeat(6);
@@ -256,7 +264,7 @@
     wall.innerHTML = '';
     $('count').textContent = photos.length;
     if (!photos.length) {
-      wall.innerHTML = `<div class="empty"><div class="bot">${window.PainelFrame.discoSVG()}</div><div class="big">Seja o primeiro a aparecer aqui!</div><p>Escaneie o QR Code ao lado e tire sua foto 📸</p></div>`;
+      wall.innerHTML = `<div class="empty">${(P.artes && P.artes.grupo) ? `<img class="art" src="${P.artes.grupo}" alt="">` : `<div class="bot">${window.PainelFrame.discoSVG()}</div>`}<div class="copy"><small>✦ ${escapeHtml(P.moldura && P.moldura.linha1 || 'Pop Star Party')} ✦</small><div class="big">Seja o primeiro a aparecer aqui!</div><p>Escaneie o QR Code ao lado e tire sua foto 📸</p></div></div>`;
       shown = [];
       return;
     }
@@ -419,10 +427,22 @@
     if (spotlightBusy || !photos.length) return scheduleShowcase();
     showing = true; nextShow(true);
   }
+  // Artes que aparecem de vez em quando na vitrine, entre as fotos dos convidados
+  const ART_SLIDES = [
+    ['grupo', 'Pop Star Party', `${P.aniversariante || ''} faz ${P.idade || ''}!`],
+    ['aniversariante', 'A aniversariante', P.aniversariante || ''],
+    ['dupla', 'Hoje é dia de brilhar', `${P.aniversariante || ''} ✦ ${P.idade || ''} anos`],
+  ].filter(([k]) => (P.artes || {})[k]).map(([k, kicker, title]) => ({ id: 'art-' + k, url: P.artes[k], kicker, title, art: true }));
+  let showCount = 0, artIdx = 0;
   function nextShow(first) {
     if (!showing) return;
-    const pool = photos.length > 1 ? photos.filter((p) => p.id !== lastShown) : photos;
-    const p = pool[Math.floor(Math.random() * pool.length)];
+    showCount++;
+    let p;
+    if (ART_SLIDES.length && showCount % 4 === 0) { p = ART_SLIDES[artIdx++ % ART_SLIDES.length]; }
+    else {
+      const pool = photos.length > 1 ? photos.filter((x) => x.id !== lastShown) : photos;
+      p = pool[Math.floor(Math.random() * pool.length)];
+    }
     if (!p) return stopShowcase();
     if (!first && p.id === lastShown) { showT = setTimeout(() => nextShow(false), EACH); return; }
     lastShown = p.id;
@@ -433,8 +453,15 @@
       pre.onload = () => {
         if (!showing) return;
         img.src = p.url;
-        $('showName').innerHTML = p.name ? `<span>${escapeHtml(p.name)}</span>` : 'Um convidado';
-        $('showMsg').textContent = p.message ? `“${p.message}”` : '';
+        if (p.art) {
+          $('showText').querySelector('small').textContent = `✦ ${p.kicker} ✦`;
+          $('showName').innerHTML = `<span>${escapeHtml(p.title)}</span>`;
+          $('showMsg').textContent = '';
+        } else {
+          $('showText').querySelector('small').textContent = 'Relembrando 💜';
+          $('showName').innerHTML = p.name ? `<span>${escapeHtml(p.name)}</span>` : 'Um convidado';
+          $('showMsg').textContent = p.message ? `“${p.message}”` : '';
+        }
         $('showcase').classList.add('on');
         img.classList.remove('out'); txt.classList.remove('out');
         showT = setTimeout(() => nextShow(false), EACH);

@@ -44,6 +44,15 @@ window.PAINEL = {
     texto: '#1E1B2E',
   },
 
+  // Artes (imagens em public/img). Usadas nas molduras, no telão e na home do celular.
+  artes: {
+    avatar: '/img/sarah-avatar.jpg',        // rosto da aniversariante (cabeçalhos)
+    aniversariante: '/img/sarah.jpg',       // moldura "Com a Sarah" e vitrine
+    grupo: '/img/popstars.jpg',             // telão (tela inicial e vitrine)
+    faixaGrupo: '/img/popstars-faixa.jpg',  // moldura "Pop Stars"
+    dupla: '/img/sarah-dupla.jpg',          // vitrine do telão
+  },
+
   // Nome do arquivo quando o convidado salva a foto
   arquivoFoto: 'festa-da-sarah',
 

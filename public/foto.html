@@ -56,6 +56,8 @@
   .hero { position: relative; z-index: 2; width: 100%; max-width: 440px; padding: 0 20px; display: flex; flex-direction: column; align-items: center; gap: 14px; text-align: center; margin: 10px 0; }
   .disco { width: 108px; height: 132px; margin-top: -6px; filter: drop-shadow(0 0 24px color-mix(in srgb, var(--accent-2) 70%, transparent)); animation: swing 4s ease-in-out infinite; transform-origin: 50% 0; }
   .disco svg { width: 100%; height: 100%; display: block; }
+  .disco.avatar { width: 128px; height: 128px; margin-top: 0; border-radius: 50%; padding: 5px; background: conic-gradient(from 200deg, var(--accent), var(--accent-2), #fff, var(--accent)); animation: none; box-shadow: 0 0 40px -4px var(--accent); }
+  .disco.avatar img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; display: block; border: 4px solid var(--bg); }
   @keyframes swing { 50% { transform: rotate(6deg); } }
   .kicker { margin: 0; display: inline-flex; gap: 8px; align-items: center; font-weight: 800; font-size: 12px; letter-spacing: .28em; text-transform: uppercase; color: var(--accent-2); border: 1.5px solid color-mix(in srgb, var(--accent-2) 60%, transparent); padding: 7px 14px; border-radius: 99px; background: #0A061299; backdrop-filter: blur(6px); }
   .mega { margin: 0; line-height: .86; font-weight: 400; display: flex; flex-direction: column; align-items: center; }
@@ -91,6 +93,7 @@
   @media (max-height: 740px) {
     #welcome .hero { gap: 9px; margin: 4px 0; }
     .disco { width: 70px; height: 86px; }
+    .disco.avatar { width: 92px; height: 92px; }
     .mega .name { font-size: clamp(64px, 22vw, 110px); }
     .mega .age { font-size: clamp(24px, 8vw, 36px); margin-top: 2px; }
     .sub { font-size: 14px; }
@@ -299,7 +302,8 @@
   let basePhoto = null, rawPhoto = null, finalPhoto = null;
   let stickers = [], selSticker = null;
 
-  $('heroRobot').innerHTML = F.discoSVG();
+  $('heroRobot').innerHTML = (window.PAINEL.artes && window.PAINEL.artes.avatar) ? `<img src="${window.PAINEL.artes.avatar}" alt="">` : F.discoSVG();
+  if (window.PAINEL.artes && window.PAINEL.artes.avatar) $('heroRobot').classList.add('avatar');
   // Home: nome com efeito e faixas animadas
   const P = window.PAINEL;
   $('heroName').textContent = P.aniversariante || P.nome; $('heroName').dataset.txt = $('heroName').textContent;
@@ -441,8 +445,10 @@
   }
 
   // ---------- Fluxo ----------
-  $('start').onclick = () => {
+  $('start').onclick = async () => {
     try { localStorage.setItem('mural-name', getName()); } catch {}
+    const btn = $('start'), txt = btn.textContent; btn.disabled = true; btn.textContent = 'Carregando…';
+    await F.ready; btn.disabled = false; btn.textContent = txt;
     renderFrames(); show('choose');
   };
   $('backWelcome').onclick = () => show('welcome');
@@ -596,6 +602,7 @@
     document.body.appendChild(a); a.click(); a.remove();
   };
   $('again').onclick = () => { renderFrames(); show('choose'); };
+  F.ready.then(() => { if ($('choose').classList.contains('active')) renderFrames(); });
 })();
 </script>
 </body>
