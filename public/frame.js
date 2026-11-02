@@ -74,23 +74,22 @@
     // ---------------------------------------------------------------- POP STARS
     {
       id: 'popstars', nome: 'Pop Stars',
-      hole: { x: 0, y: 0, w: W, h: 880 },
+      hole: { x: 0, y: 0, w: W, h: 1120 },
       // grupo inteiro (sem cortar ninguém), esfumado no topo e nas laterais
-      layers: [{ key: 'faixa', x: 120, y: 790, w: 840, h: 830, fit: 'contain', align: 'bottom', fadeTop: 150, fadeSides: 90 }],
+      layers: [{ key: 'faixa', x: 0, y: 1040, w: W, h: 580, fit: 'contain', align: 'bottom', fadeTop: 110 }],
       draw() {
-        const hp = rr(0, 0, W, 880, 0);
+        const hp = rr(0, 0, W, 1120, 0);
         return svg(`
           <radialGradient id="stP" cx=".5" cy=".7" r=".75"><stop offset="0" stop-color="#5B2C9E"/><stop offset=".6" stop-color="#2A1050"/><stop offset="1" stop-color="${INK}"/></radialGradient>
           <linearGradient id="topP" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${INK}" stop-opacity=".85"/><stop offset="1" stop-color="${INK}" stop-opacity="0"/></linearGradient>
           <linearGradient id="beamL" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${PINK}" stop-opacity=".55"/><stop offset="1" stop-color="${PINK}" stop-opacity="0"/></linearGradient>
           <linearGradient id="beamR" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${LILAC}" stop-opacity=".5"/><stop offset="1" stop-color="${LILAC}" stop-opacity="0"/></linearGradient>`, `
           ${paper('url(#stP)', hp)}
-          <polygon points="0,820 60,820 300,1620 0,1620" fill="url(#beamL)"/>
-          <polygon points="1020,820 1080,820 1080,1620 780,1620" fill="url(#beamR)"/>
+
           <linearGradient id="seamP" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2A1050" stop-opacity="0"/><stop offset="1" stop-color="#2A1050" stop-opacity="1"/></linearGradient>
-          <rect x="0" y="700" width="${W}" height="182" fill="url(#seamP)"/>
+          <rect x="0" y="960" width="${W}" height="162" fill="url(#seamP)"/>
           <rect x="0" y="0" width="${W}" height="380" fill="url(#topP)"/>
-          ${spark(70, 1000, 18, '#FFFFFF', .9)}${spark(1010, 1080, 22, '#FFFFFF', .9)}${spark(40, 1300, 10, LILAC)}${spark(1040, 1400, 12, PINK)}`);
+`);
       },
       top(name, date) {
         const g = shortName(name).toUpperCase() || 'CONVIDADO VIP';
@@ -102,7 +101,7 @@
             <text x="0" y="40" text-anchor="middle" font-family="${DISP}" font-size="126" fill="#FFFFFF">${esc(AGE)}</text>
             <text x="0" y="76" text-anchor="middle" font-family="${SANS}" font-weight="800" font-size="21" letter-spacing="8" fill="#FFFFFF">ANOS</text></g>
           <text x="60" y="272" font-family="${SANS}" font-weight="800" font-size="24" letter-spacing="9" fill="${LILAC}">${esc(TAG)}</text>
-          <g transform="translate(${W / 2} 850) rotate(-3)" filter="url(#soft)">
+          <g transform="translate(${W / 2} 1010) rotate(-3)" filter="url(#soft)">
             <rect x="${-tw / 2}" y="-38" width="${tw}" height="76" fill="${PINK}"/>
             ${big(g, 0, 22, 46, tw - 70, 'fill="#FFFFFF"', 'middle')}
           </g>
@@ -172,8 +171,7 @@
         return svg(`
           <linearGradient id="bgB" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${PURPLE}"/><stop offset="1" stop-color="${INK}"/></linearGradient>
           <clipPath id="stripB"><path d="${card}"/></clipPath>`, `
-          <rect width="${W}" height="${H}" fill="url(#bgB)"/>
-          <path d="${rr(48, 56, 1000, 1540, 44)}" fill="#000000" opacity=".35"/>
+          <path fill-rule="evenodd" d="${rr(48, 56, 1000, 1540, 44)} ${hp}" fill="#000000" opacity=".35"/>
           <path fill-rule="evenodd" fill="#FFFFFF" d="${card} ${hp}"/>
           <path fill-rule="evenodd" fill="url(#bgB)" d="M0 0 H${W} V${H} H0 Z ${card}"/>
           <g clip-path="url(#stripB)"><rect x="40" y="40" width="148" height="1540" fill="${PINK}"/></g>

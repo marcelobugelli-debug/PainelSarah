@@ -49,12 +49,12 @@ window.PAINEL = {
     avatar: '/img/sarah-avatar.jpg',        // rosto da aniversariante (cabeçalhos)
     aniversariante: '/img/sarah.jpg',       // moldura "Com a Sarah" e vitrine
     grupo: '/img/popstars.jpg',             // telão (tela inicial e vitrine)
-    faixaGrupo: '/img/popstars-palco.jpg',  // moldura "Pop Stars" (grupo de corpo inteiro)
+    faixaGrupo: '/img/popstars-linha.jpg',  // moldura "Pop Stars" (grupo lado a lado)
     dupla: '/img/sarah-dupla.jpg',          // vitrine do telão
   },
 
   // Palquinho do telão (canto superior direito): fotos que a luz vai mostrando, uma de cada vez
-  palco: ['/img/sarah.jpg', '/img/sarah-dupla.jpg', '/img/popstars.jpg'],
+  palco: ['/img/sarah.jpg', '/img/sarah-dupla.jpg', '/img/popstars-linha.jpg'],
 
   // Fotos que ficam girando no fundo (home do celular e telão)
   fundo: ['/img/sarah.jpg', '/img/sarah-dupla.jpg'],

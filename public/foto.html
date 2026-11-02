@@ -147,7 +147,7 @@
   .shutter:active { transform: scale(.92); }
 
   /* ================= Revisão / sucesso ================= */
-  .result { width: 100%; max-width: 420px; flex: 1; display: flex; flex-direction: column; gap: 14px; justify-content: center; margin-top: 10px; }
+  .result { width: 100%; max-width: 420px; flex: 1; display: flex; flex-direction: column; gap: 14px; justify-content: flex-start; margin-top: 10px; }
   .result img.photo { width: 100%; border-radius: 16px; box-shadow: 0 0 0 1px #ffffff1a, 0 22px 44px -16px color-mix(in srgb, var(--accent) 60%, transparent); display: block; }
   .result h2 { margin: 0; font-family: 'Anton', sans-serif; font-weight: 400; font-size: 34px; letter-spacing: .03em; text-transform: uppercase; text-align: center; line-height: 1.05; }
   .result p { margin: 0; color: var(--muted); text-align: center; }
@@ -161,7 +161,7 @@
   .error { color: #FFD0D8; background: #5A1030; border: 1px solid #A0204F; border-radius: 12px; padding: 10px 14px; font-size: 15px; display: none; }
   .error.show { display: block; }
   #fileInput { display: none; }
-  .photo-wrap { position: relative; width: 100%; touch-action: none; user-select: none; -webkit-user-select: none; }
+  .photo-wrap { position: relative; width: min(100%, calc(52dvh * 0.6667)); margin: 0 auto; touch-action: pan-y; user-select: none; -webkit-user-select: none; }
   .photo-wrap img.photo { width: 100%; }
   .sticker { position: absolute; transform: translate(-50%, -50%); line-height: 1; cursor: grab; touch-action: none; }
   .sticker.sel { outline: 2px dashed #fff; outline-offset: 4px; border-radius: 8px; filter: drop-shadow(0 0 6px var(--accent)); }
@@ -172,7 +172,7 @@
   .st-tools.show { display: flex; }
   .st-tools button { border: 1px solid var(--line); background: var(--panel); border-radius: 999px; padding: 8px 14px; font: inherit; font-weight: 700; color: #fff; cursor: pointer; }
   .small-label { font-weight: 700; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--accent-2); }
-  textarea { width: 100%; margin-top: 8px; padding: 14px 16px; font: inherit; font-size: 17px; color: #fff; border: 1.5px solid var(--line); border-radius: 14px; background: #0A0612; outline: none; resize: none; min-height: 84px; text-transform: none; letter-spacing: normal; font-weight: 500; }
+  textarea { width: 100%; margin-top: 8px; padding: 12px 14px; font: inherit; font-size: 16px; scroll-margin-bottom: 110px; color: #fff; border: 1.5px solid var(--line); border-radius: 14px; background: #0A0612; outline: none; resize: none; min-height: 64px; text-transform: none; letter-spacing: normal; font-weight: 500; }
   textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 25%, transparent); }
   .counter-chars { text-align: right; font-size: 12px; color: var(--muted); margin-top: -8px; }
   .msg-done { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 12px 16px; font-style: italic; color: #fff; text-align: center; display: none; }
@@ -257,6 +257,10 @@
   <div class="brand"><i></i> <span data-cfg="nome">Mural de Fotos</span></div>
   <div class="result">
     <div class="photo-wrap" id="photoWrap"><img class="photo" id="preview" alt="Sua foto com a moldura" draggable="false"></div>
+    <label class="small-label">Deixe um recado para a Sarah (opcional)
+      <textarea id="message" maxlength="140" rows="2" placeholder="Escreva uma mensagem…"></textarea>
+    </label>
+    <div class="counter-chars"><span id="msgCount">0</span>/140</div>
     <div>
       <div class="small-label">Figurinhas (toque para colocar, arraste para mover)</div>
       <div class="stickers" id="stickerBar"></div>
@@ -264,10 +268,6 @@
         <button id="stSmaller">− Menor</button><button id="stBigger">+ Maior</button><button id="stRemove">🗑 Tirar</button>
       </div>
     </div>
-    <label class="small-label">Deixe um recado (opcional)
-      <textarea id="message" maxlength="140" placeholder="Escreva uma mensagem…"></textarea>
-    </label>
-    <div class="counter-chars"><span id="msgCount">0</span>/140</div>
     <div class="error" id="err2"></div>
     <div class="row sticky-actions">
       <button class="btn btn-ghost" id="retake">Tirar outra</button>
@@ -600,6 +600,7 @@
 
   // ---------- Recado e envio ----------
   $('message').oninput = () => { $('msgCount').textContent = $('message').value.length; };
+  $('message').onfocus = () => setTimeout(() => $('message').scrollIntoView({ block: 'center', behavior: 'smooth' }), 300);
   $('send').onclick = async () => {
     const btn = $('send');
     btn.disabled = true;
