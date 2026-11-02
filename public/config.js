@@ -53,6 +53,9 @@ window.PAINEL = {
     dupla: '/img/sarah-dupla.jpg',          // vitrine do telão
   },
 
+  // Fotos que ficam girando no fundo (home do celular e telão)
+  fundo: ['/img/sarah.jpg', '/img/sarah-dupla.jpg'],
+
   // Nome do arquivo quando o convidado salva a foto
   arquivoFoto: 'festa-da-sarah',
 

@@ -36,6 +36,10 @@
 
   /* ================= HOME: balada ================= */
   #welcome { overflow: hidden; padding-left: 0; padding-right: 0; justify-content: space-between; }
+  .slides { position: absolute; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+  .slides .slide { position: absolute; inset: 0; background-size: cover; background-position: center 18%; opacity: 0; transform: scale(1.06); transition: opacity 1.6s ease, transform 7s ease; }
+  .slides .slide.on { opacity: 1; transform: scale(1); }
+  .slides::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, #0A0612cc 0%, #0A061266 28%, #0A061299 55%, #0A0612f2 82%); }
   .club { position: absolute; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
   .beam { position: absolute; top: -10%; width: 38vw; max-width: 220px; height: 120%; transform-origin: 50% 0; filter: blur(2px); opacity: .55; mix-blend-mode: screen; }
   .beam.b1 { left: 2%; background: linear-gradient(to bottom, var(--accent), transparent 75%); clip-path: polygon(45% 0, 55% 0, 100% 100%, 0 100%); animation: sweep 6s ease-in-out infinite alternate; }
@@ -178,6 +182,7 @@
 
 <!-- 1. Home -->
 <section class="screen active" id="welcome">
+  <div class="slides" id="slides" aria-hidden="true"></div>
   <div class="club" aria-hidden="true">
     <div class="dots"></div>
     <div class="beam b1"></div><div class="beam b2"></div><div class="beam b3"></div>
@@ -221,6 +226,7 @@
     </button>
     <button class="btn btn-ghost" id="backWelcome">Voltar</button>
     <div class="error" id="err0"></div>
+    <button class="btn btn-ghost" id="nativeCam" style="display:none">📷 Tirar pela câmera do celular</button>
   </div>
 </section>
 
@@ -302,8 +308,11 @@
   let basePhoto = null, rawPhoto = null, finalPhoto = null;
   let stickers = [], selSticker = null;
 
-  $('heroRobot').innerHTML = (window.PAINEL.artes && window.PAINEL.artes.avatar) ? `<img src="${window.PAINEL.artes.avatar}" alt="">` : F.discoSVG();
-  if (window.PAINEL.artes && window.PAINEL.artes.avatar) $('heroRobot').classList.add('avatar');
+  $('heroRobot').innerHTML = F.discoSVG();
+  // Fotos da aniversariante girando no fundo da home
+  const SLIDES = window.PAINEL.fundo || [];
+  SLIDES.forEach((u, i) => { const d = document.createElement('div'); d.className = 'slide' + (i === 0 ? ' on' : ''); d.style.backgroundImage = `url("${u}")`; $('slides').appendChild(d); });
+  if (SLIDES.length > 1) { let k = 0; setInterval(() => { const all = $('slides').children; all[k].classList.remove('on'); k = (k + 1) % all.length; all[k].classList.add('on'); }, 5500); }
   // Home: nome com efeito e faixas animadas
   const P = window.PAINEL;
   $('heroName').textContent = P.aniversariante || P.nome; $('heroName').dataset.txt = $('heroName').textContent;
@@ -322,15 +331,25 @@
   const hole = () => F.byId(frameId).hole;
 
   // ---------- Molduras ----------
+  const thumbs = {};
+  let framePromise = null, frameKey = '';
+  function warmFrame() {
+    const key = frameId + '|' + getName();
+    if (key !== frameKey) { frameKey = key; framePromise = F.frameImage(frameId, getName(), dateText); framePromise.catch(() => {}); }
+    return framePromise;
+  }
   function renderFrames() {
     $('frames').innerHTML = '';
     F.FRAMES.forEach((f) => {
       const b = document.createElement('button');
       b.className = 'frame-opt' + (f.id === frameId ? ' sel' : '');
-      b.innerHTML = `<img alt="" src="${F.thumbURL(f.id, getName())}"><span>${f.nome}</span>`;
-      b.onclick = () => { frameId = f.id; try { localStorage.setItem('mural-frame', frameId); } catch {} renderFrames(); };
+      b.innerHTML = `<img alt=""><span>${f.nome}</span>`;
+      const key = f.id + '|' + getName();
+      (thumbs[key] = thumbs[key] || F.thumb(f.id, getName())).then((u) => { b.querySelector('img').src = u; }).catch(() => {});
+      b.onclick = () => { frameId = f.id; try { localStorage.setItem('mural-frame', frameId); } catch {} renderFrames(); warmFrame(); };
       $('frames').appendChild(b);
     });
+    warmFrame();
   }
   function placeVideo() {
     const h = hole();
@@ -338,10 +357,15 @@
     Object.assign($('video').style, box);
     Object.assign($('fx').style, box);
   }
+  let overlayKey = '';
   async function prepareFrame() {
-    const svg = F.frameSVG(frameId, getName(), dateText);
-    $('frameOverlay').src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
-    frameImg = await F.frameImage(frameId, getName(), dateText);
+    frameImg = await warmFrame();
+    if (overlayKey !== frameKey) {
+      overlayKey = frameKey;
+      const blob = await new Promise((r) => frameImg.toBlob(r, 'image/png'));
+      const old = $('frameOverlay').src; $('frameOverlay').src = URL.createObjectURL(blob);
+      if (old && old.startsWith('blob:')) URL.revokeObjectURL(old);
+    }
     placeVideo();
   }
 
@@ -452,15 +476,22 @@
     renderFrames(); show('choose');
   };
   $('backWelcome').onclick = () => show('welcome');
+  function nativeCamera() { $('fileInput').value = ''; $('fileInput').click(); }
   $('openCam').onclick = async () => {
-    showErr($('err0'), '');
-    try { await prepareFrame(); } catch { return showErr($('err0'), 'Não foi possível carregar a moldura. Recarregue a página.'); }
-    if (liveCameraOk()) {
-      try { await startCamera(); renderChips(); show('camera'); return; }
-      catch (e) { console.warn('Câmera ao vivo indisponível, usando câmera do sistema', e); }
+    showErr($('err0'), ''); $('nativeCam').style.display = 'none';
+    // Sem câmera ao vivo: abre a câmera do celular na hora (precisa ser no mesmo toque)
+    if (!liveCameraOk()) { prepareFrame().catch(() => {}); return nativeCamera(); }
+    // Pede a câmera imediatamente e monta a moldura em paralelo
+    const cam = startCamera();
+    try { await prepareFrame(); } catch { stopCamera(); return showErr($('err0'), 'Não foi possível carregar a moldura. Recarregue a página.'); }
+    try { await cam; renderChips(); show('camera'); }
+    catch (e) {
+      console.warn('Câmera ao vivo indisponível', e);
+      showErr($('err0'), 'Não conseguimos abrir a câmera aqui. Libere a câmera para este site ou use o botão abaixo.');
+      $('nativeCam').style.display = '';
     }
-    $('fileInput').value = ''; $('fileInput').click();
   };
+  $('nativeCam').onclick = nativeCamera;
   $('changeFrame').onclick = () => { stopCamera(); renderFrames(); show('choose'); };
 
   // Alternativa: câmera nativa do celular
@@ -503,8 +534,8 @@
   };
   $('back').onclick = () => { stopCamera(); renderFrames(); show('choose'); };
   $('retake').onclick = async () => {
-    if (liveCameraOk()) { try { await startCamera(); renderChips(); show('camera'); return; } catch {} }
-    $('fileInput').value = ''; $('fileInput').click();
+    if (!liveCameraOk()) return nativeCamera();
+    try { await startCamera(); renderChips(); show('camera'); } catch { show('choose'); $('nativeCam').style.display = ''; }
   };
 
   // ---------- Figurinhas ----------

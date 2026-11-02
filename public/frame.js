@@ -1,6 +1,7 @@
 // Molduras do mural. Nome, textos, cores e artes vêm de config.js (window.PAINEL).
 // Cada moldura tem uma "janela" (hole) onde a câmera aparece e uma função que desenha o SVG por cima.
-// Fontes e imagens são embutidas no SVG (data URL) para a moldura funcionar dentro da foto final.
+// A moldura é montada num canvas em 3 camadas: SVG de base, artes (imagens) e SVG de cima.
+// Só as fontes vão dentro do SVG; as artes são desenhadas direto no canvas (bem mais leve no celular).
 (function () {
   const W = 1080, H = 1620;
   const C = window.PAINEL || { nome: 'Mural de Fotos', moldura: {}, cores: { destaque: '#FF2E93', destaqueClaro: '#C8A2FF', destaqueEscuro: '#7B2CBF', texto: '#1E1B2E' } };
@@ -15,8 +16,9 @@
   const SANS = `'Helvetica Neue', Helvetica, Arial, sans-serif`;
   const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&apos;' }[c]));
 
-  // ---------- Carregamento de fontes e artes (embutidas no SVG) ----------
-  const DATA = {}; let FONTS = '';
+  // ---------- Carregamento de fontes e artes ----------
+  const IMG = {}; let FONTS = '';
+  const loadImg = (url) => new Promise((res) => { if (!url) return res(null); const im = new Image(); im.onload = () => res(im); im.onerror = () => res(null); im.src = url; });
   function toDataURL(blob) { return new Promise((res, rej) => { const fr = new FileReader(); fr.onload = () => res(fr.result); fr.onerror = rej; fr.readAsDataURL(blob); }); }
   async function fetchData(url) { const r = await fetch(url); if (!r.ok) throw new Error(url); return toDataURL(await r.blob()); }
   async function loadFont(family, local, google) {
@@ -35,7 +37,8 @@
   const ready = Promise.all([
     loadFont('PS Anton', '/fonts/anton.woff2', 'Anton'),
     loadFont('PS Monoton', '/fonts/monoton.woff2', 'Monoton'),
-    ...Object.entries({ faixa: ART.faixaGrupo, sarah: ART.aniversariante }).map(([k, u]) => u ? fetchData(u).then((d) => { DATA[k] = d; }).catch(() => {}) : null),
+    loadImg(ART.faixaGrupo).then((im) => { IMG.faixa = im; }),
+    loadImg(ART.aniversariante).then((im) => { IMG.sarah = im; }),
   ]).catch(() => {});
 
   // ---------- Utilitários ----------
@@ -62,9 +65,6 @@
     <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="10" stdDeviation="14" flood-color="#000" flood-opacity=".35"/></filter>
     <filter id="glow" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="8" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
     ${defs}</defs>${body}</svg>`;
-  const img = (key, x, y, w, h, clip, align = 'xMidYMid slice') => DATA[key]
-    ? `<image href="${DATA[key]}" xlink:href="${DATA[key]}" x="${x}" y="${y}" width="${w}" height="${h}" preserveAspectRatio="${align}" ${clip ? `clip-path="url(#${clip})"` : ''}/>`
-    : `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${PURPLE}" ${clip ? `clip-path="url(#${clip})"` : ''}/>`;
   // Fita adesiva / etiqueta inclinada
   const tape = (cx, cy, w, h, rot, fill, text, tc = '#fff', size = 34) => `<g transform="translate(${cx} ${cy}) rotate(${rot})" filter="url(#soft)">
     <rect x="${-w / 2}" y="${-h / 2}" width="${w}" height="${h}" fill="${fill}"/>
@@ -74,59 +74,57 @@
     // ---------------------------------------------------------------- POP STARS
     {
       id: 'popstars', nome: 'Pop Stars',
-      hole: { x: 60, y: 300, w: 960, h: 790 },
-      draw(name, date) {
-        const h = this.hole, hp = holePath(h, 26);
-        const ay = 1112, ah = 478;
+      hole: { x: 0, y: 0, w: W, h: H },
+      layers: [{ key: 'faixa', x: 0, y: 1030, w: W, h: 590, align: 'top', fadeTop: 200 }],
+      draw() {
         return svg(`
-          <radialGradient id="g1" cx=".15" cy=".05" r=".7"><stop offset="0" stop-color="${PURPLE}" stop-opacity=".9"/><stop offset="1" stop-color="${INK}" stop-opacity="0"/></radialGradient>
-          <radialGradient id="g2" cx=".95" cy="1" r=".6"><stop offset="0" stop-color="${PINK}" stop-opacity=".55"/><stop offset="1" stop-color="${INK}" stop-opacity="0"/></radialGradient>
-          <clipPath id="artC"><path d="${rr(60, ay, 960, ah, 26)}"/></clipPath>
-          <linearGradient id="shade" x1="0" y1="0" x2="0" y2="1"><stop offset=".45" stop-color="${INK}" stop-opacity="0"/><stop offset="1" stop-color="${INK}" stop-opacity=".92"/></linearGradient>`, `
-          <rect width="${W}" height="${H}" fill="${INK}"/><rect width="${W}" height="${H}" fill="url(#g1)"/><rect width="${W}" height="${H}" fill="url(#g2)"/>
-          <path fill-rule="evenodd" fill="${INK}" opacity="0" d="M0 0 H${W} V${H} H0 Z ${hp}"/>
-          <g>
-            ${big(STAR.toUpperCase(), 56, 232, fit(STAR, 640, 236, 0.47), 680, 'fill="#FFFFFF"')}
-            <g transform="translate(882 136) rotate(6)"><rect x="-96" y="-96" width="192" height="192" rx="20" fill="${PINK}"/>
-              <text x="0" y="42" text-anchor="middle" font-family="${DISP}" font-size="132" fill="#FFFFFF">${esc(AGE)}</text>
-              <text x="0" y="78" text-anchor="middle" font-family="${SANS}" font-weight="800" font-size="22" letter-spacing="8" fill="#FFFFFF">ANOS</text></g>
-            <text x="60" y="278" font-family="${SANS}" font-weight="800" font-size="24" letter-spacing="9" fill="${LILAC}">${esc(TAG)}${date ? `  ·  ${esc(date)}` : ''}</text>
+          <linearGradient id="topP" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${INK}" stop-opacity=".88"/><stop offset="1" stop-color="${INK}" stop-opacity="0"/></linearGradient>`, `
+          <rect x="0" y="0" width="${W}" height="400" fill="url(#topP)"/>`);
+      },
+      top(name, date) {
+        const g = shortName(name).toUpperCase() || 'CONVIDADO VIP';
+        const tw = Math.min(900, g.length * 46 * 0.5 + 120);
+        return svg(`
+          <linearGradient id="botP" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${INK}" stop-opacity="0"/><stop offset="1" stop-color="${INK}" stop-opacity=".85"/></linearGradient>`, `
+          ${big(STAR.toUpperCase(), 56, 222, fit(STAR, 620, 226, 0.47), 640, 'fill="#FFFFFF"')}
+          <g transform="translate(900 132) rotate(6)"><rect x="-92" y="-92" width="184" height="184" rx="20" fill="${PINK}"/>
+            <text x="0" y="40" text-anchor="middle" font-family="${DISP}" font-size="126" fill="#FFFFFF">${esc(AGE)}</text>
+            <text x="0" y="76" text-anchor="middle" font-family="${SANS}" font-weight="800" font-size="21" letter-spacing="8" fill="#FFFFFF">ANOS</text></g>
+          <text x="60" y="272" font-family="${SANS}" font-weight="800" font-size="24" letter-spacing="9" fill="${LILAC}">${esc(TAG)}</text>
+          <g transform="translate(${W / 2} 1010) rotate(-3)" filter="url(#soft)">
+            <rect x="${-tw / 2}" y="-38" width="${tw}" height="76" fill="${PINK}"/>
+            ${big(g, 0, 22, 46, tw - 70, 'fill="#FFFFFF"', 'middle')}
           </g>
-          <path d="${hp}" fill="none" stroke="#FFFFFF" stroke-width="5"/>
-          <g clip-path="url(#artC)">${img('faixa', 60, ay, 960, ah)}<rect x="60" y="${ay}" width="960" height="${ah}" fill="url(#shade)"/></g>
-          <path d="${rr(60, ay, 960, ah, 26)}" fill="none" stroke="#FFFFFF" stroke-width="5"/>
-          <text x="96" y="${ay + ah - 92}" font-family="${SANS}" font-weight="800" font-size="22" letter-spacing="8" fill="${LILAC}">NA FESTA COM AS POP STARS</text>
-          ${big(shortName(name).toUpperCase() || 'CONVIDADO VIP', 94, ay + ah - 30, fit(guest(name), 820, 72, 0.47), 860, 'fill="#FFFFFF"')}
-          ${tape(890, 1094, 250, 58, -5, PINK, 'BACKSTAGE ✦', '#fff', 30)}
-          ${spark(1000, 66, 18, '#FFFFFF', .9)}${spark(1030, 250, 10, LILAC)}`);
+          <rect x="0" y="1520" width="${W}" height="100" fill="url(#botP)"/>
+          <text x="${W / 2}" y="1592" text-anchor="middle" font-family="${SANS}" font-weight="800" font-size="20" letter-spacing="10" fill="#FFFFFF">NA FESTA COM AS POP STARS${date ? ` · ${esc(date)}` : ''}</text>`);
       },
     },
     // ---------------------------------------------------------------- COM A SARAH
     {
       id: 'comsarah', nome: `Com a ${STAR}`,
-      hole: { x: 56, y: 56, w: 968, h: 1030 },
-      draw(name, date) {
+      hole: { x: 56, y: 56, w: 968, h: 1010 },
+      layers: [{ key: 'sarah', x: 86, y: 1012, w: 356, h: 400, align: 'top', rot: -6, cx: 264, cy: 1250 }],
+      draw() {
         const h = this.hole, hp = holePath(h, 22);
-        const px = 64, py = 1010, pw = 400, ph = 520;
         return svg(`
           <linearGradient id="bgC" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFF6FB"/><stop offset="1" stop-color="#F1E6FF"/></linearGradient>
-          <clipPath id="polC"><rect x="${px + 22}" y="${py + 22}" width="${pw - 44}" height="${ph - 120}"/></clipPath>
           <pattern id="dotsC" width="22" height="22" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r="2" fill="${PINK}" opacity=".25"/></pattern>`, `
           ${paper('url(#bgC)', hp)}
-          <rect x="${W - 360}" y="${H - 300}" width="360" height="300" fill="url(#dotsC)"/>
+          <rect x="${W - 330}" y="${H - 150}" width="330" height="150" fill="url(#dotsC)"/>
           <path d="${hp}" fill="none" stroke="${INK}" stroke-width="4"/>
-          <g transform="rotate(-6 ${px + pw / 2} ${py + ph / 2})" filter="url(#soft)">
-            <rect x="${px}" y="${py}" width="${pw}" height="${ph}" fill="#FFFFFF"/>
-            <g clip-path="url(#polC)">${img('sarah', px + 22, py + 22, pw - 44, ph - 120, null, 'xMidYMin slice')}</g>
-            <text x="${px + pw / 2}" y="${py + ph - 38}" text-anchor="middle" font-family="${DISP}" font-size="44" letter-spacing="2" fill="${INK}">A ANIVERSARIANTE</text>
-          </g>
-          ${tape(px + pw / 2 - 10, py - 4, 170, 46, -12, LILAC, '', '#fff')}
-          <text x="${W - 56}" y="1176" text-anchor="end" font-family="${SANS}" font-weight="800" font-size="24" letter-spacing="9" fill="${PURPLE}">EU + A</text>
-          ${big(STAR.toUpperCase(), W - 50, 1340, fit(STAR, 520, 190, 0.47), 520, `fill="${PINK}"`, 'end')}
-          <rect x="${W - 476}" y="1376" width="420" height="6" fill="${INK}"/>
-          ${big(shortName(name).toUpperCase() || 'CONVIDADO VIP', W - 56, 1452, fit(guest(name), 470, 60, 0.47), 470, `fill="${INK}"`, 'end')}
-          <text x="${W - 56}" y="1506" text-anchor="end" font-family="${SANS}" font-weight="700" font-size="20" letter-spacing="6" fill="${PURPLE}">${esc(TAG)} · ${esc(AGE)} ANOS${date ? ` · ${esc(date)}` : ''}</text>
-          ${spark(W - 90, 1220, 22, PINK)}${spark(W - 140, 1250, 11, LILAC)}`);
+          <g transform="rotate(-6 264 1250)" filter="url(#soft)">
+            <rect x="64" y="990" width="400" height="520" fill="#FFFFFF"/>
+            <text x="264" y="1474" text-anchor="middle" font-family="${DISP}" font-size="42" letter-spacing="2" fill="${INK}">A ANIVERSARIANTE</text>
+          </g>`);
+      },
+      top(name, date) {
+        return svg('', `
+          ${tape(254, 990, 170, 46, -12, LILAC, '', '#fff')}
+          <text x="${W - 56}" y="1132" text-anchor="end" font-family="${SANS}" font-weight="800" font-size="24" letter-spacing="9" fill="${PURPLE}">EU + A</text>
+          ${big(STAR.toUpperCase(), W - 52, 1318, fit(STAR, 500, 168, 0.47), 500, `fill="${PINK}"`, 'end')}
+          <rect x="${W - 476}" y="1350" width="420" height="6" fill="${INK}"/>
+          ${big(shortName(name).toUpperCase() || 'CONVIDADO VIP', W - 56, 1428, fit(guest(name), 460, 58, 0.47), 460, `fill="${INK}"`, 'end')}
+          <text x="${W - 56}" y="1480" text-anchor="end" font-family="${SANS}" font-weight="700" font-size="19" letter-spacing="5" fill="${PURPLE}">${esc(TAG)} · ${esc(AGE)} ANOS</text>`);
       },
     },
     // ---------------------------------------------------------------- NEON
@@ -171,11 +169,11 @@
           <text transform="translate(146 1520) rotate(-90)" font-family="${DISP}" font-size="96" textLength="1440" lengthAdjust="spacingAndGlyphs" fill="#FFFFFF">BACKSTAGE ✦ ALL ACCESS</text>
           <path d="${hp}" fill="none" stroke="${INK}" stroke-width="3"/>
           <text x="${h.x}" y="1222" font-family="${SANS}" font-weight="800" font-size="20" letter-spacing="8" fill="#8B84A6">CONVIDADO(A) VIP</text>
-          ${big(shortName(name).toUpperCase() || 'CONVIDADO VIP', h.x - 4, 1310, fit(guest(name), 600, 92, 0.47), 600, `fill="${INK}"`)}
+          ${big(shortName(name).toUpperCase() || 'CONVIDADO VIP', h.x - 4, 1310, fit(guest(name), 540, 92, 0.47), 540, `fill="${INK}"`)}
           ${big(`${STAR.toUpperCase()} ${AGE} TOUR`, h.x, 1392, 58, 520, `fill="${PINK}"`)}
           <text x="${h.x}" y="1436" font-family="${SANS}" font-weight="700" font-size="20" letter-spacing="6" fill="#8B84A6">${esc(TAG)}${date ? ` · ${esc(date)}` : ''}</text>
           <g>${barcode(h.x, 1470, 360, 70, INK)}</g>
-          <text x="${h.x + h.w}" y="1540" text-anchor="end" font-family="${DISP}" font-size="300" fill="none" stroke="${LILAC}" stroke-width="5">${esc(AGE)}</text>`);
+          <text x="${h.x + h.w}" y="1430" text-anchor="end" font-family="${DISP}" font-size="230" fill="none" stroke="${LILAC}" stroke-width="5">${esc(AGE)}</text>`);
       },
     },
     // ---------------------------------------------------------------- CAPA
@@ -211,26 +209,47 @@
   ];
 
   const byId = (id) => FRAMES.find((f) => f.id === id) || FRAMES[0];
-  const frameSVG = (id, name, date) => byId(id).draw(name, date);
-  function frameImage(id, name, date) {
-    return ready.then(() => new Promise((resolve, reject) => {
-      const im = new Image();
-      im.onload = () => resolve(im);
-      im.onerror = reject;
-      im.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(frameSVG(id, name, date));
-    }));
+  const svgImage = (str) => new Promise((res, rej) => { const im = new Image(); im.onload = () => res(im); im.onerror = rej; im.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(str); });
+
+  // Desenha uma arte (cobrindo o retângulo), com topo esfumado e rotação opcionais
+  function drawLayer(ctx, L) {
+    const oc = document.createElement('canvas'); oc.width = L.w; oc.height = L.h;
+    const o = oc.getContext('2d'), im = IMG[L.key];
+    if (im) {
+      const sc = Math.max(L.w / im.naturalWidth, L.h / im.naturalHeight), dw = im.naturalWidth * sc, dh = im.naturalHeight * sc;
+      o.drawImage(im, (L.w - dw) / 2, L.align === 'top' ? 0 : (L.h - dh) / 2, dw, dh);
+    } else { o.fillStyle = PURPLE; o.fillRect(0, 0, L.w, L.h); }
+    if (L.fadeTop) {
+      o.globalCompositeOperation = 'destination-in';
+      const g = o.createLinearGradient(0, 0, 0, L.h); g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(Math.min(1, L.fadeTop / L.h), 'rgba(0,0,0,1)'); g.addColorStop(1, 'rgba(0,0,0,1)');
+      o.fillStyle = g; o.fillRect(0, 0, L.w, L.h);
+    }
+    ctx.save();
+    if (L.rot) { ctx.translate(L.cx, L.cy); ctx.rotate((L.rot * Math.PI) / 180); ctx.translate(-L.cx, -L.cy); }
+    ctx.drawImage(oc, L.x, L.y);
+    ctx.restore();
   }
-  // Miniatura para o seletor (janela preenchida com uma silhueta genérica)
-  function thumbURL(id, name) {
-    const f = byId(id), h = f.hole;
+  function placeholder(ctx, h) {
     const cx = h.x + h.w / 2, cy = h.y + h.h * 0.55, s = Math.min(h.w, h.h) / 900;
-    const person = `<rect x="${h.x}" y="${h.y}" width="${h.w}" height="${h.h}" fill="#3A2E52"/>
-      <circle cx="${cx}" cy="${cy - 120 * s}" r="${150 * s}" fill="#6B5A8E"/>
-      <path d="M ${cx - 300 * s} ${h.y + h.h} Q ${cx - 300 * s} ${cy + 80 * s} ${cx} ${cy + 80 * s} Q ${cx + 300 * s} ${cy + 80 * s} ${cx + 300 * s} ${h.y + h.h} Z" fill="#6B5A8E"/>`;
-    const s2 = f.draw(name || '', '');
-    const i = s2.indexOf('</defs>') + 7;
-    return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(s2.slice(0, i) + person + s2.slice(i));
+    ctx.fillStyle = '#3A2E52'; ctx.fillRect(h.x, h.y, h.w, h.h);
+    ctx.fillStyle = '#6B5A8E';
+    ctx.beginPath(); ctx.arc(cx, cy - 120 * s, 150 * s, 0, 7); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(cx - 300 * s, h.y + h.h); ctx.quadraticCurveTo(cx - 300 * s, cy + 80 * s, cx, cy + 80 * s); ctx.quadraticCurveTo(cx + 300 * s, cy + 80 * s, cx + 300 * s, h.y + h.h); ctx.fill();
   }
+  // Monta a moldura num canvas (scale < 1 para miniaturas)
+  async function render(id, name, date, scale = 1, withPlaceholder = false) {
+    await ready;
+    const f = byId(id), c = document.createElement('canvas');
+    c.width = Math.round(W * scale); c.height = Math.round(H * scale);
+    const ctx = c.getContext('2d'); ctx.scale(scale, scale);
+    if (withPlaceholder) placeholder(ctx, f.hole);
+    ctx.drawImage(await svgImage(f.draw(name, date)), 0, 0, W, H);
+    (f.layers || []).forEach((L) => drawLayer(ctx, L));
+    if (f.top) ctx.drawImage(await svgImage(f.top(name, date)), 0, 0, W, H);
+    return c;
+  }
+  const frameImage = (id, name, date) => render(id, name, date, 1);
+  const thumb = async (id, name) => (await render(id, name, '', 0.34, true)).toDataURL('image/jpeg', 0.86);
 
   // Globo espelhado (decoração)
   function discoSVG() {
@@ -250,5 +269,5 @@
     return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" fill="${PINK}"/><text x="50" y="66" text-anchor="middle" font-family="${DISP}" font-size="46" fill="#fff">${esc(AGE || '★')}</text></svg>`;
   }
 
-  window.PainelFrame = { W, H, FRAMES, byId, frameSVG, frameImage, thumbURL, logoSVG, discoSVG, ready };
+  window.PainelFrame = { W, H, FRAMES, byId, render, frameImage, thumb, logoSVG, discoSVG, ready };
 })();

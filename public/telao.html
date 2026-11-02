@@ -19,6 +19,12 @@
 
   /* Fundo animado */
   .bg { position: fixed; inset: 0; overflow: hidden; z-index: 0; }
+  .slides { position: absolute; inset: 0; }
+  .slides .slide { position: absolute; top: 0; bottom: 0; width: 46vw; background-size: cover; background-position: center 20%; opacity: 0; transition: opacity 2s ease, transform 9s ease; transform: scale(1.05); }
+  .slides .slide:nth-child(odd) { left: 0; -webkit-mask-image: linear-gradient(90deg, #000 55%, transparent); mask-image: linear-gradient(90deg, #000 55%, transparent); }
+  .slides .slide:nth-child(even) { right: 0; -webkit-mask-image: linear-gradient(270deg, #000 55%, transparent); mask-image: linear-gradient(270deg, #000 55%, transparent); }
+  .slides .slide.on { opacity: .75; transform: scale(1); }
+  .slides::after { content: ''; position: absolute; inset: 0; background: radial-gradient(70% 90% at 50% 50%, #0A061299, #0A0612dd); }
   .blob { position: absolute; border-radius: 50%; filter: blur(90px); opacity: .55; animation: drift 22s ease-in-out infinite alternate; }
   .b1 { width: 55vw; height: 55vw; left: -15vw; top: -20vw; background: var(--accent); }
   .b2 { width: 45vw; height: 45vw; right: -12vw; bottom: -18vw; background: var(--accent-2); animation-delay: -7s; }
@@ -143,7 +149,7 @@
 </style>
 </head>
 <body>
-<div class="bg"><div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div><div class="grain"></div>
+<div class="bg"><div class="slides" id="slides"></div><div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div><div class="grain"></div>
   <div class="beam l1"></div><div class="beam l2"></div><div class="beam l3"></div><div class="floor"></div>
   <i class="tw" style="left:30%;top:16%"></i><i class="tw" style="left:62%;top:9%;animation-delay:.9s"></i><i class="tw" style="left:48%;top:78%;animation-delay:1.6s"></i><i class="tw" style="left:8%;top:70%;animation-delay:.5s"></i><i class="tw" style="left:75%;top:40%;animation-delay:2.1s"></i>
 </div>
@@ -213,8 +219,10 @@
   $('logo').innerHTML = robot;
   const P = window.PAINEL;
   const ARTES = P.artes || {};
-  if (ARTES.avatar) { $('disco').innerHTML = `<img src="${ARTES.avatar}" alt="">`; $('disco').classList.add('avatar'); }
-  else $('disco').innerHTML = window.PainelFrame.discoSVG();
+  $('disco').innerHTML = window.PainelFrame.discoSVG();
+  // Fotos da aniversariante girando no fundo do telão
+  (P.fundo || []).forEach((u, i) => { const d = document.createElement('div'); d.className = 'slide' + (i === 0 ? ' on' : ''); d.style.backgroundImage = `url("${u}")`; $('slides').appendChild(d); });
+  if ((P.fundo || []).length > 1) { let k = 0; setInterval(() => { const all = $('slides').children; all[k].classList.remove('on'); k = (k + 1) % all.length; all[k].classList.add('on'); }, 8000); }
   $('wallName').textContent = (P.aniversariante || P.nome); $('wallName').dataset.txt = $('wallName').textContent;
   if (P.idade) $('wallAge').textContent = P.idade; else document.querySelector('h1 .age').style.display = 'none';
   $('ticker').textContent = ([`${(P.aniversariante || '').toUpperCase()} FAZ ${P.idade || ''}`, 'POP STAR PARTY', 'ESCANEIE O QR CODE', 'TIRE SUA FOTO', 'DEIXE UM RECADO', 'APAREÇA NO TELÃO'].join(' ✦ ') + ' ✦ ').repeat(6);
